@@ -32,12 +32,8 @@ export default function Navbar({
   criticalCount = 0,
   onOpenOnboarding,
   onGoToHome
-}) {
-  const [isTeamOpen, setIsTeamOpen] = useState(false);
-  const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [activeFaqIndex, setActiveFaqIndex] = useState(0);
 
   const featureItems = [
     {
@@ -394,16 +390,18 @@ export default function Navbar({
                       </button>
                     )}
 
-                    <button
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        setIsTeamOpen(true);
-                      }}
-                      className="w-full mt-1 flex items-center space-x-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-xl transition font-semibold cursor-pointer"
-                    >
-                      <Users className="h-3.5 w-3.5 text-slate-500" />
-                      <span>About System & Team</span>
-                    </button>
+                    {onGoToHome && (
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          onGoToHome();
+                        }}
+                        className="w-full mt-1 flex items-center space-x-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 rounded-xl transition font-semibold cursor-pointer"
+                      >
+                        <Users className="h-3.5 w-3.5 text-slate-500" />
+                        <span>About System & Team</span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => {
@@ -465,141 +463,6 @@ export default function Navbar({
           </div>
         </nav>
       </header>
-
-      {/* ============================================================ */}
-      {/* OUR TEAM MODAL                                               */}
-      {/* ============================================================ */}
-      {isTeamOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="rounded-2xl border border-slate-200 bg-white text-slate-900 p-6 sm:p-7 max-w-lg w-full space-y-5 animate-in zoom-in-95 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-red-50 text-[#E51A24]">
-                  <Users className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">BeforeStock Engineering Team</h3>
-                  <p className="text-xs text-slate-500">Autonomous Supply Chain Intelligence Core</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsTeamOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-xl hover:bg-slate-100 transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-4 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-slate-900">Dhanush</span>
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-red-50 text-[#E51A24] border border-red-200">
-                    Lead System Architect
-                  </span>
-                </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Conceived and engineered BeforeStock's end-to-end architecture, deterministic telemetry calculus, human governance gates, and real-time WebSocket infrastructure.
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-4 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-slate-900">DeepMind Antigravity Agent</span>
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-red-50 text-[#E51A24] border border-red-200">
-                    Autonomous AI Pair Programmer
-                  </span>
-                </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Collaborative agentic synthesis of Matter.js 2D zero-gravity physics, React Bits SwipeToast notification loops, Spring Boot REST controllers, and Talentsy-inspired design systems.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
-                <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200">
-                  <span className="text-slate-500 block font-sans">Core Engine</span>
-                  <span className="font-bold text-slate-900">Spring Boot 3.2</span>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200">
-                  <span className="text-slate-500 block font-sans">AI Reasoning</span>
-                  <span className="font-bold text-slate-900">Ollama Llama-3</span>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200">
-                  <span className="text-slate-500 block font-sans">Database</span>
-                  <span className="font-bold text-slate-900">MySQL 8.0</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <button
-                onClick={() => setIsTeamOpen(false)}
-                className="rounded-full bg-[#E51A24] hover:bg-[#C91822] text-white font-bold px-6 py-2 text-xs transition shadow-sm"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* FAQ MODAL                                                    */}
-      {/* ============================================================ */}
-      {isFaqOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="rounded-2xl border border-slate-200 bg-white text-slate-900 p-6 sm:p-7 max-w-xl w-full space-y-4 animate-in zoom-in-95 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-red-50 text-[#E51A24]">
-                  <HelpCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">Frequently Asked Questions</h3>
-                  <p className="text-xs text-slate-500">Everything you need to know about SupplyGuard</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsFaqOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-xl hover:bg-slate-100 transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-              {faqItems.map((item, idx) => {
-                const isOpen = activeFaqIndex === idx;
-                return (
-                  <div key={idx} className="rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden transition">
-                    <button
-                      onClick={() => setActiveFaqIndex(isOpen ? -1 : idx)}
-                      className="w-full p-3.5 text-left flex items-center justify-between text-xs font-bold text-slate-900 hover:bg-slate-100 transition"
-                    >
-                      <span>{item.q}</span>
-                      <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[#E51A24]' : 'text-slate-400'}`} />
-                    </button>
-                    {isOpen && (
-                      <div className="p-3.5 pt-0 text-[11px] leading-relaxed text-slate-600 border-t border-slate-200/60">
-                        {item.a}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <button
-                onClick={() => setIsFaqOpen(false)}
-                className="rounded-full bg-[#E51A24] hover:bg-[#C91822] text-white font-bold px-6 py-2 text-xs transition shadow-sm"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ============================================================ */}
       {/* PRICING MODAL                                                */}

@@ -1,37 +1,33 @@
-# Pure White Container Redesign & Git Push Walkthrough
+# Product Image Upload (First Field) Walkthrough
 
-The SupplyGuard UI has been updated to **Pure White (`#FFFFFF`) containers** on a **Full Black (`#000000`) background**, and pushed to GitHub!
+The **Product Image** file upload has been moved to the very top of the **"Onboard New Product SKU"** modal as the first input field, visually verified, and pushed to GitHub!
 
-**Repository**: [`FarahHamna-05/Jarvis`](https://github.com/FarahHamna-05/Jarvis)
+**Repository**: [`FarahHamna-05/Jarvis`](https://github.com/FarahHamna-05/Jarvis)  
+**Active Branch**: [`hackthon-frontend`](https://github.com/FarahHamna-05/Jarvis/tree/hackthon-frontend)  
+**Latest Commit**: `9917485` (*feat: position Product Image upload field first in Add Product SKU modal*)
 
 ---
 
-## Pushed Branches & Commits
+## What Was Changed
 
-| Branch | Latest Commit | Description | Status |
-| :--- | :--- | :--- | :--- |
-| **`main`** | `80c98f6` | Pure white container redesign with architectural borders and slate telemetry subcards, rebased on top of Indian E.164 phone normalization | **Pushed & Live** |
-| **`hackthon-frontend`** | `8caab88` | Full BeforeStock & SupplyGuard frontend with pure white container layout | **Pushed & Live** |
+1. **Repositioned Product Image to First Field:**
+   - In [`src/supplyguard/components/ProductModal.jsx`](file:///J:/hackthon/hackthon/src/supplyguard/components/ProductModal.jsx#L115-L175), moved the direct file upload dropzone to the very top of the form.
+   - Form field order is now:
+     1. **Product Image** (Direct drag-and-drop / file upload with instant thumbnail preview)
+     2. **Product Name / Title**
+     3. **Category** & **Current On-Hand Stock**
+     4. **Reorder Threshold** & **Last 7 Days Usage (CSV)**
+     5. **Description**
+     6. **Primary Supplier**
+     7. **Alternate Backup Suppliers**
+
+2. **Pushed to GitHub:**
+   - Verified build with `npm run build`.
+   - Pushed commit `9917485` to `origin/hackthon-frontend`.
 
 ---
 
 ## Visual Verification
 
-![Dashboard Pure White Container](file:///C:/Users/jshur/.gemini/antigravity/brain/0040e173-7ae1-47dc-b16b-8fa3a7f7c849/dashboard_white_container.png)
-
----
-
-## Changes Implemented & Pushed
-
-1. **Pure White (`#FFFFFF`) Container Architecture:**
-   - **Spotlight & Center Stage:** Replaced cream backgrounds with `#FFFFFF`, subtle `#E2E8F0` architectural borders, and elevation drop shadows on the pure black `#000000` canvas.
-   - **Subcards & Telemetry Chips:** High-precision `bg-slate-50/90` cards with `border-slate-200/90` for metric gauges (`Primary Vendor`, `Lead Time`, `Deficit Gap`, and the 8 Telemetry Matrix nodes).
-   - **Right Column Bento Cards:** Clean `#FFFFFF` threat stack cards, dark folder visual, and swipe-to-authorize action decks.
-   - **Tabs Updated:** Product Catalog, Supplier Directory, Chaos Sandbox, Communications Mailbox, Topology Graph, and Audit Trail containers are all pure white.
-   - **Text & Contrast:** Deep dark slate typography (`#0F172A`) providing high legibility on white, with vibrant crimson `#E51A24` accent highlights.
-
-2. **Git Repository Sync:**
-   - Rebased cleanly over remote commit `32d3369` (`feat: add automatic Indian E.164 phone normalization for supplier voice calls`).
-   - Pushed commit `80c98f6` to `origin main`.
-   - Pushed commit `8caab88` to `origin hackthon-frontend`.
-   - Updated preview screenshots in the repository.
+### Add Product Modal with Product Image Upload First:
+![Add Product Modal Image First](file:///C:/Users/jshur/.gemini/antigravity/brain/0040e173-7ae1-47dc-b16b-8fa3a7f7c849/add_product_modal_image_first.png)
