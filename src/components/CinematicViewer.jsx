@@ -719,7 +719,7 @@ export default function CinematicViewer({ onOpenAuth, goToTeamTrigger, goToFront
           </div>
         </div>
 
-        {/* Middle/Bottom Left: "OH," & "AUTOMATE & USER FRIENDLY" */}
+        {/* Middle/Bottom Left: "OT" & "AUTOMATE & USER FRIENDLY" */}
         <div style={{
           position: 'absolute',
           bottom: '22%',
@@ -739,7 +739,7 @@ export default function CinematicViewer({ onOpenAuth, goToTeamTrigger, goToFront
             letterSpacing: '0.03em',
             transform: `translateX(${(1 - showcaseProgress) * -35}px)`
           }}>
-            OH,
+            OT
           </div>
           <div style={{
             fontSize: 'clamp(2.8rem, 5.2vw, 5.5rem)',
