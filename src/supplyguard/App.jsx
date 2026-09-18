@@ -74,7 +74,13 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
   });
 
   const [activeMitigationEvent, setActiveMitigationEvent] = useState(null);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('modal') === 'addProduct';
+    } catch {
+      return false;
+    }
+  });
   const [editingProduct, setEditingProduct] = useState(null);
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);

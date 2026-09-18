@@ -9,7 +9,7 @@ const Pricing = lazy(() => import('./components/Pricing'));
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const DocumentVerification = lazy(() => import('./components/DocumentVerification'));
 const VerificationSuccessPage = lazy(() => import('./components/VerificationSuccessPage'));
-const SupplyGuardApp = lazy(() => import('./supplyguard/App'));
+import SupplyGuardApp from './supplyguard/App';
 import ErrorBoundary from './supplyguard/components/ErrorBoundary';
 
 export default function App() {

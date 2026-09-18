@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Boxes, Upload } from 'lucide-react';
+import { X, Boxes, Upload, Trash2, CheckCircle2 } from 'lucide-react';
 
 export default function ProductModal({ product, suppliers = [], onClose, onSave }) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Semiconductors');
   const [description, setDescription] = useState('');
   const [imageBase64, setImageBase64] = useState('');
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [currentStock, setCurrentStock] = useState(250);
   const [reorderThreshold, setReorderThreshold] = useState(100);
   const [primarySupplierId, setPrimarySupplierId] = useState('');
@@ -28,15 +29,39 @@ export default function ProductModal({ product, suppliers = [], onClose, onSave 
     }
   }, [product, suppliers]);
 
-  const handleImageFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  const processFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageBase64(reader.result);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
   };
 
   const handleSubmit = (e) => {
@@ -156,23 +181,59 @@ export default function ProductModal({ product, suppliers = [], onClose, onSave 
             />
           </div>
 
-          {/* Image URL or File Upload */}
+          {/* Dedicated Direct Product Image File Upload (No URL) */}
           <div>
-            <label className="text-slate-700 font-bold block mb-1">Image (URL or File Upload)</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={imageBase64}
-                onChange={(e) => setImageBase64(e.target.value)}
-                placeholder="https://... or upload below"
-                className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E51A24]/30 focus:border-[#E51A24] shadow-xs"
-              />
-              <label className="cursor-pointer rounded-xl bg-red-50 hover:bg-red-100 text-[#E51A24] border border-red-200 font-bold px-3 py-2 flex items-center space-x-1.5 transition">
-                <Upload className="h-3.5 w-3.5 stroke-[2.5]" />
-                <span className="text-[11px]">Upload</span>
+            <label className="text-slate-700 font-bold block mb-1.5">Product Image</label>
+            {imageBase64 ? (
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 shadow-2xs">
+                <div className="h-14 w-14 rounded-lg overflow-hidden border border-slate-200 bg-white shrink-0 flex items-center justify-center">
+                  <img src={imageBase64} alt="Product Preview" className="h-full w-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-1.5 text-xs font-bold text-emerald-600">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>Image uploaded</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5">Product SKU thumbnail ready</p>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <label className="cursor-pointer text-[11px] font-bold text-[#E51A24] hover:text-[#C91822] flex items-center space-x-1 transition">
+                      <Upload className="h-3 w-3 stroke-[2.5]" />
+                      <span>Change</span>
+                      <input type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" />
+                    </label>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setImageBase64('')}
+                      className="text-[11px] font-bold text-slate-500 hover:text-red-600 flex items-center space-x-1 transition cursor-pointer"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <label
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`cursor-pointer flex flex-col items-center justify-center py-4 px-3 rounded-xl border-2 border-dashed transition-all ${
+                  isDraggingFile
+                    ? 'border-[#E51A24] bg-red-50/60 scale-[1.01]'
+                    : 'border-slate-200 hover:border-[#E51A24]/60 bg-slate-50/70 hover:bg-slate-50'
+                }`}
+              >
+                <div className="h-8 w-8 rounded-full bg-red-50 text-[#E51A24] flex items-center justify-center mb-1.5 border border-red-100">
+                  <Upload className="h-4 w-4 stroke-[2.5]" />
+                </div>
+                <p className="text-xs font-bold text-slate-800">
+                  Click to upload product image <span className="font-normal text-slate-500">or drag and drop</span>
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP, or SVG file</p>
                 <input type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" />
               </label>
-            </div>
+            )}
           </div>
 
           {/* Primary Supplier */}
