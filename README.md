@@ -76,7 +76,27 @@ cd supplyguard-backend
 ```
 *Backend runs at `http://localhost:8085`*
 
-### 2. Frontend Setup
+### 2. Real Email Delivery Setup (SendGrid)
+To enable live supplier email dispatching to real inboxes:
+1. **Free Account**: Create an account at [SendGrid](https://signup.sendgrid.com) (free plan includes 100 emails/day).
+2. **Sender Verification (Required)**: 
+   - Navigate to **Settings &rarr; Sender Authentication &rarr; Verify a Single Sender**.
+   - Fill in your details (e.g., your real email or corporate address).
+   - Check your inbox and click the verification link sent by SendGrid. SendGrid will reject emails if the `from` address has not completed verification.
+3. **Generate API Key**:
+   - Navigate to **Settings &rarr; API Keys &rarr; Create API Key**.
+   - Choose **Restricted Access** with `Mail Send` permissions (or Full Access) and copy your key (`SG....`).
+4. **Configure Credentials**:
+   - Set in `supplyguard-backend/src/main/resources/application.properties` or set environment variables:
+     ```bash
+     export SENDGRID_API_KEY="SG.your_actual_sendgrid_key"
+     export SENDGRID_FROM_EMAIL="your_verified_sender_address@domain.com"
+     ```
+   - *Note*: If `SENDGRID_API_KEY` is not set or uses the placeholder, the system will gracefully log status `"failed"` with diagnostic details in MongoDB without crashing.
+5. **Live Inbox Testing**:
+   - In the **Supplier Hub** or **Chaos Sandbox**, you can input any personal test email address (e.g., your Gmail/work email) to observe live delivery in your own inbox.
+
+### 3. Frontend Setup
 ```bash
 cd supplyguard-frontend
 npm install

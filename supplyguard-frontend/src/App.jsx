@@ -291,36 +291,166 @@ export default function App() {
   };
 
   // Email Outreach Actions
-  const handleDraftEmailForRisk = async (event) => {
+  const handleDraftEmailForRisk = async (event, overrideEmail) => {
     try {
-      const riskId = event.id || 1;
-      await apiClient.post(`/communications/draft/${riskId}`);
+      const riskId = event?.id || 1;
+      const params = {};
+      if (overrideEmail && overrideEmail.trim()) {
+        params.toEmail = overrideEmail.trim();
+      }
+      const res = await apiClient.post(`/communications/draft/${riskId}`, null, { params });
       await fetchAllData();
       setActiveTab('inbox');
-      showToast({
-        title: 'Procurement Draft Created',
-        description: `Draft prepared for ${event.supplierName || 'supplier'}. Pending sign-off.`,
-        type: 'communication'
-      });
+
+      const convo = res.data;
+      const latestMsg = convo?.messages && convo.messages.length > 0 ? convo.messages[convo.messages.length - 1] : null;
+      const isFailed = latestMsg?.deliveryStatus === 'FAILED' || latestMsg?.deliveryStatus === 'failed' || latestMsg?.status === 'failed';
+      const recipient = latestMsg?.recipientEmail || overrideEmail || event?.supplierName || 'supplier';
+      const timeStr = latestMsg?.sentAt
+        ? new Date(latestMsg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (isFailed) {
+        showToast({
+          title: '⚠️ SendGrid Delivery Alert',
+          description: latestMsg?.deliveryDetails || 'Delivery failed via SendGrid API. Conversation recorded with failed status.',
+          type: 'warning',
+          duration: 6000
+        });
+      } else {
+        showToast({
+          title: `✅ Sent to ${recipient} at ${timeStr}`,
+          description: `AI-synthesized procurement notice successfully delivered via SendGrid.`,
+          type: 'communication',
+          duration: 6000
+        });
+      }
     } catch (err) {
       console.error('Draft email error:', err);
       setActiveTab('inbox');
     }
   };
 
-  const handleSendApprovedEmail = async (convoId, messageId, approvedBy) => {
+  const handleSendApprovedEmail = async (convoId, messageId, approvedBy, overrideEmail) => {
     try {
-      await apiClient.post(`/communications/${convoId}/send/${messageId}`, null, {
-        params: { approvedBy }
+      const params = { approvedBy };
+      if (overrideEmail && overrideEmail.trim()) {
+        params.toEmail = overrideEmail.trim();
+      }
+      const response = await apiClient.post(`/communications/${convoId}/send/${messageId}`, null, {
+        params
       });
       await fetchAllData();
-      showToast({
-        title: 'PO Dispatch Authorized',
-        description: `Autonomous procurement email dispatched by ${approvedBy}.`,
-        type: 'communication'
-      });
+
+      const convo = response?.data;
+      const latestMsg = convo?.messages?.find((m) => m.id === messageId) ||
+        (convo?.messages && convo.messages.length > 0 ? convo.messages[convo.messages.length - 1] : null);
+      const isFailed = latestMsg?.deliveryStatus === 'FAILED' || latestMsg?.deliveryStatus === 'failed' || latestMsg?.status === 'failed';
+      const recipient = latestMsg?.recipientEmail || overrideEmail || 'supplier inbox';
+      const timeStr = latestMsg?.sentAt
+        ? new Date(latestMsg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (isFailed) {
+        showToast({
+          title: '❌ Delivery Failed',
+          description: latestMsg?.deliveryDetails || 'Email delivery failed. You can adjust the recipient address and retry.',
+          type: 'warning',
+          duration: 6000
+        });
+      } else {
+        showToast({
+          title: `✅ Delivered to ${recipient} at ${timeStr}`,
+          description: `Dispatched from freefiregodtamil@gmail.com via Gmail SMTP. Conversation audit log updated.`,
+          type: 'communication',
+          duration: 6000
+        });
+      }
     } catch (err) {
       console.error('Send email error:', err);
+      showToast({
+        title: 'Dispatch Failed',
+        description: err.response?.data?.message || err.message || 'Error communicating with mail server.',
+        type: 'error'
+      });
+    }
+  };
+
+  const handleUpdateSupplier = async (supplierId, updateData) => {
+    try {
+      await apiClient.put(`/suppliers/${supplierId}`, updateData);
+      await fetchAllData();
+      showToast({
+        title: 'Supplier Updated',
+        description: `Successfully updated ${updateData.name || 'supplier'} contact & details.`,
+        type: 'success'
+      });
+      return true;
+    } catch (err) {
+      console.error('Update supplier error:', err);
+      showToast({
+        title: 'Update Failed',
+        description: err.response?.data?.message || err.message || 'Could not update supplier.',
+        type: 'error'
+      });
+      return false;
+    }
+  };
+
+  const handleContactSupplier = async (supplierId, payload = {}) => {
+    try {
+      if (payload.updateSupplierEmail && payload.toEmail) {
+        const targetSup = suppliers.find(s => s.id === supplierId);
+        if (targetSup) {
+          await apiClient.put(`/suppliers/${supplierId}`, {
+            ...targetSup,
+            contactEmail: payload.toEmail.trim()
+          });
+        }
+      }
+
+      const body = {
+        approvedBy: currentUser?.username || 'Operator',
+        toEmail: payload.toEmail,
+        customSubject: payload.customSubject,
+        customNotes: payload.customNotes,
+        productId: payload.productId
+      };
+
+      const response = await apiClient.post(`/suppliers/${supplierId}/contact`, body);
+      await fetchAllData();
+      setActiveTab('inbox');
+
+      const convo = response.data;
+      const latestMsg = convo?.messages && convo.messages.length > 0 ? convo.messages[convo.messages.length - 1] : null;
+      const isFailed = latestMsg?.deliveryStatus === 'FAILED' || latestMsg?.deliveryStatus === 'failed' || latestMsg?.status === 'failed';
+      const recipient = latestMsg?.recipientEmail || payload.toEmail || 'supplier';
+      const timeStr = latestMsg?.sentAt
+        ? new Date(latestMsg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (isFailed) {
+        showToast({
+          title: '⚠️ Email Delivery Alert',
+          description: `Delivery Failed: ${latestMsg?.deliveryDetails || 'Mail server reported failure'}. Saved to MongoDB.`,
+          type: 'warning',
+          duration: 6000
+        });
+      } else {
+        showToast({
+          title: `✅ Sent to ${recipient} at ${timeStr}`,
+          description: `Dispatched from freefiregodtamil@gmail.com to supplier inbox. Conversation recorded in MongoDB.`,
+          type: 'communication',
+          duration: 6000
+        });
+      }
+    } catch (err) {
+      console.error('Contact supplier error:', err);
+      showToast({
+        title: 'Contact Supplier Failed',
+        description: err.response?.data?.message || err.message || 'Could not contact supplier.',
+        type: 'error'
+      });
     }
   };
 
@@ -459,6 +589,7 @@ export default function App() {
                     setIsProductModalOpen(true);
                   }}
                   onDeleteProduct={handleDeleteProduct}
+                  onRefresh={fetchAllData}
                 />
               </div>
             )}
@@ -471,6 +602,8 @@ export default function App() {
                   onToggleStatus={handleToggleSupplierStatus}
                   onOpenAddSupplier={() => setIsSupplierModalOpen(true)}
                   onOpenDraftEmail={handleDraftEmailForRisk}
+                  onContactSupplier={handleContactSupplier}
+                  onUpdateSupplier={handleUpdateSupplier}
                 />
               </div>
             )}
@@ -483,6 +616,7 @@ export default function App() {
                   products={products}
                   onSimulate={handleSimulateDisruption}
                   onReset={handleResetSimulator}
+                  onContactSupplier={handleContactSupplier}
                 />
               </div>
             )}

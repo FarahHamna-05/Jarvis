@@ -33,12 +33,16 @@ public class CommunicationService {
     private final RiskEventRepository riskEventRepository;
     private final AuditLogRepository auditLogRepository;
     private final AIReasoningService aiReasoningService;
-    private final Optional<JavaMailSender> mailSender;
+    private final EmailService emailService;
 
     /**
-     * Create an AI outreach email draft for a risk event.
+     * Create an AI outreach email draft for a risk event and actually dispatch via SendGrid.
+     *
+     * @param riskEventId     ID of the detected risk event
+     * @param toEmailOverride Optional destination email override (for live demo/testing)
+     * @return Saved conversation with actual delivery result
      */
-    public SupplierConversation createEmailDraftForRisk(Long riskEventId) {
+    public SupplierConversation createEmailDraftForRisk(Long riskEventId, String toEmailOverride) {
         RiskEvent event = riskEventRepository.findById(riskEventId)
                 .orElseThrow(() -> new RuntimeException("RiskEvent not found: " + riskEventId));
 
@@ -76,26 +80,64 @@ public class CommunicationService {
                         .updatedAt(LocalDateTime.now())
                         .build());
 
+        String effectiveRecipient = (toEmailOverride != null && !toEmailOverride.trim().isEmpty())
+                ? toEmailOverride.trim()
+                : (conversation.getSupplierEmail() != null ? conversation.getSupplierEmail().trim() : "supplier@example.com");
+
+        // ACTUALLY SEND that email to the supplier's real email address using SendGrid's API
+        EmailService.EmailSendResult sendResult = emailService.sendSupplierEmail(
+                effectiveRecipient,
+                subject,
+                emailBody
+        );
+
         SupplierConversation.ConversationMessage draftMessage = SupplierConversation.ConversationMessage.builder()
                 .id(UUID.randomUUID().toString())
                 .sender("AI")
                 .senderName("SupplyGuard Autonomous Procurement Agent")
                 .subject(subject)
                 .body(emailBody)
-                .deliveryStatus("PENDING_APPROVAL")
+                .recipientEmail(effectiveRecipient)
+                .deliveryStatus(sendResult.isSuccess() ? "SENT" : "FAILED")
+                .status(sendResult.isSuccess() ? "sent" : "failed")
+                .deliveryDetails(sendResult.getMessage())
+                .sentAt(sendResult.getSentAt())
                 .timestamp(LocalDateTime.now())
                 .build();
 
         conversation.getMessages().add(draftMessage);
+        conversation.setLastDeliveryStatus(sendResult.isSuccess() ? "sent" : "failed");
+        conversation.setLastDeliveryDetails(sendResult.getMessage());
+        conversation.setLastSentAt(sendResult.getSentAt());
         conversation.setUpdatedAt(LocalDateTime.now());
 
-        return conversationRepository.save(conversation);
+        SupplierConversation saved = conversationRepository.save(conversation);
+
+        // Record Audit Log with actual delivery result
+        auditLogRepository.save(AuditLog.builder()
+                .eventType(sendResult.isSuccess() ? "EMAIL_SENT" : "EMAIL_FAILED")
+                .entityType("RISK_EVENT_OUTREACH")
+                .entityId(String.valueOf(riskEventId))
+                .actionTaken("DISPATCH_AI_RISK_OUTREACH_EMAIL")
+                .reasoningDetails(String.format("Subject: %s | Recipient: %s | SendGrid HTTP %d: %s",
+                        subject, effectiveRecipient, sendResult.getStatusCode(), sendResult.getMessage()))
+                .dataSnapshotJson(emailBody)
+                .userApproved(true)
+                .approvedBy("AUTONOMOUS_RISK_ENGINE")
+                .timestamp(LocalDateTime.now())
+                .build());
+
+        return saved;
+    }
+
+    public SupplierConversation createEmailDraftForRisk(Long riskEventId) {
+        return createEmailDraftForRisk(riskEventId, null);
     }
 
     /**
-     * Send approved email to supplier.
+     * Send approved email to supplier using SendGrid API.
      */
-    public SupplierConversation sendApprovedEmail(String conversationId, String messageId, String approvedBy) {
+    public SupplierConversation sendApprovedEmail(String conversationId, String messageId, String toEmailOverride, String approvedBy) {
         SupplierConversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found: " + conversationId));
 
@@ -104,35 +146,135 @@ public class CommunicationService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Message not found in conversation: " + messageId));
 
-        targetMessage.setDeliveryStatus("SENT");
-        conversation.setUpdatedAt(LocalDateTime.now());
+        String effectiveRecipient = (toEmailOverride != null && !toEmailOverride.trim().isEmpty())
+                ? toEmailOverride.trim()
+                : (conversation.getSupplierEmail() != null ? conversation.getSupplierEmail().trim() : "supplier@example.com");
 
-        // Attempt actual dispatch if mailSender is configured with live credentials, otherwise log to outbox
-        try {
-            if (mailSender.isPresent() && conversation.getSupplierEmail() != null) {
-                SimpleMailMessage mail = new SimpleMailMessage();
-                mail.setTo(conversation.getSupplierEmail());
-                mail.setSubject(targetMessage.getSubject());
-                mail.setText(targetMessage.getBody());
-                mailSender.get().send(mail);
-                logger.info("Real email dispatched to {}", conversation.getSupplierEmail());
-            } else {
-                logger.info("Email recorded in simulated dispatch outbox for {}", conversation.getSupplierEmail());
-            }
-        } catch (Exception e) {
-            logger.warn("Mail dispatch exception (logged to outbox): {}", e.getMessage());
-        }
+        // Send via real SendGrid API
+        EmailService.EmailSendResult sendResult = emailService.sendSupplierEmail(
+                effectiveRecipient,
+                targetMessage.getSubject(),
+                targetMessage.getBody()
+        );
+
+        targetMessage.setRecipientEmail(effectiveRecipient);
+        targetMessage.setSentAt(sendResult.getSentAt());
+        targetMessage.setDeliveryDetails(sendResult.getMessage());
+        targetMessage.setDeliveryStatus(sendResult.isSuccess() ? "SENT" : "FAILED");
+        targetMessage.setStatus(sendResult.isSuccess() ? "sent" : "failed");
+
+        conversation.setLastDeliveryStatus(sendResult.isSuccess() ? "sent" : "failed");
+        conversation.setLastDeliveryDetails(sendResult.getMessage());
+        conversation.setLastSentAt(sendResult.getSentAt());
+        conversation.setUpdatedAt(LocalDateTime.now());
 
         SupplierConversation saved = conversationRepository.save(conversation);
 
-        // Record Audit Log
+        // Record Audit Log with actual delivery result
         auditLogRepository.save(AuditLog.builder()
-                .eventType("EMAIL_SENT")
+                .eventType(sendResult.isSuccess() ? "EMAIL_SENT" : "EMAIL_FAILED")
                 .entityType("SUPPLIER_CONVERSATION")
                 .entityId(conversationId)
                 .actionTaken("DISPATCH_AI_PROCUREMENT_EMAIL")
-                .reasoningDetails(String.format("Subject: %s | Recipient: %s", targetMessage.getSubject(), conversation.getSupplierEmail()))
+                .reasoningDetails(String.format("Subject: %s | Recipient: %s | SendGrid HTTP %d: %s",
+                        targetMessage.getSubject(), effectiveRecipient, sendResult.getStatusCode(), sendResult.getMessage()))
                 .dataSnapshotJson(targetMessage.getBody())
+                .userApproved(true)
+                .approvedBy(approvedBy != null ? approvedBy : "USER")
+                .timestamp(LocalDateTime.now())
+                .build());
+
+        return saved;
+    }
+
+    public SupplierConversation sendApprovedEmail(String conversationId, String messageId, String approvedBy) {
+        return sendApprovedEmail(conversationId, messageId, null, approvedBy);
+    }
+
+    /**
+     * Trigger on-demand supplier outreach (generate draft & dispatch via SendGrid).
+     */
+    public SupplierConversation contactSupplierOnDemand(Long supplierId, String toEmailOverride, String customSubject, String customNotes, String productId, String approvedBy) {
+        Supplier supplier = supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + supplierId));
+
+        Product product = productId != null ? productRepository.findById(productId).orElse(null) : null;
+        if (product == null) {
+            List<Product> allProds = productRepository.findAll();
+            if (!allProds.isEmpty()) product = allProds.get(0);
+        }
+
+        String effectiveTo = (toEmailOverride != null && !toEmailOverride.trim().isEmpty())
+                ? toEmailOverride.trim()
+                : (supplier.getContactEmail() != null ? supplier.getContactEmail() : "supplier@example.com");
+
+        String productName = product != null ? product.getName() : "Critical Sourcing Material";
+        String prodId = product != null ? product.getId() : "SKU-AUTO-01";
+
+        AIContextDto.RiskContext context = AIContextDto.RiskContext.builder()
+                .productId(prodId)
+                .productName(productName)
+                .currentStock(product != null ? product.getCurrentStock() : 120)
+                .averageDailyUsage(18.5)
+                .daysUntilStockout(6.5)
+                .primarySupplierName(supplier.getName())
+                .primarySupplierLeadTime(supplier.getLeadTimeDays() != null ? supplier.getLeadTimeDays() : 14)
+                .primarySupplierStatus(supplier.getStatus() != null ? supplier.getStatus() : "ACTIVE")
+                .build();
+
+        String emailBody = (customNotes != null && !customNotes.trim().isEmpty())
+                ? customNotes.trim()
+                : aiReasoningService.generateEmailDraft(context);
+
+        String subject = (customSubject != null && !customSubject.trim().isEmpty())
+                ? customSubject.trim()
+                : String.format("URGENT: SupplyGuard Procurement Notice - %s [SKU: %s]", productName, prodId);
+
+        // Send via SendGrid
+        EmailService.EmailSendResult sendResult = emailService.sendSupplierEmail(effectiveTo, subject, emailBody);
+
+        SupplierConversation.ConversationMessage msg = SupplierConversation.ConversationMessage.builder()
+                .id(UUID.randomUUID().toString())
+                .sender("AI")
+                .senderName("SupplyGuard Autonomous Procurement Agent")
+                .subject(subject)
+                .body(emailBody)
+                .recipientEmail(effectiveTo)
+                .deliveryStatus(sendResult.isSuccess() ? "SENT" : "FAILED")
+                .status(sendResult.isSuccess() ? "sent" : "failed")
+                .deliveryDetails(sendResult.getMessage())
+                .sentAt(sendResult.getSentAt())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        SupplierConversation conversation = conversationRepository.findFirstBySupplierIdOrderByUpdatedAtDesc(supplierId)
+                .orElse(SupplierConversation.builder()
+                        .supplierId(supplier.getId())
+                        .supplierName(supplier.getName())
+                        .supplierEmail(supplier.getContactEmail())
+                        .productId(prodId)
+                        .productName(productName)
+                        .threadSubject(subject)
+                        .messages(new ArrayList<>())
+                        .createdAt(LocalDateTime.now())
+                        .build());
+
+        conversation.getMessages().add(msg);
+        conversation.setLastDeliveryStatus(sendResult.isSuccess() ? "sent" : "failed");
+        conversation.setLastDeliveryDetails(sendResult.getMessage());
+        conversation.setLastSentAt(sendResult.getSentAt());
+        conversation.setUpdatedAt(LocalDateTime.now());
+
+        SupplierConversation saved = conversationRepository.save(conversation);
+
+        auditLogRepository.save(AuditLog.builder()
+                .eventType(sendResult.isSuccess() ? "EMAIL_SENT" : "EMAIL_FAILED")
+                .entityType("SUPPLIER_CONTACT")
+                .entityId(String.valueOf(supplierId))
+                .actionTaken("ON_DEMAND_SUPPLIER_CONTACT")
+                .reasoningDetails(String.format("Subject: %s | Recipient: %s | SendGrid HTTP %d: %s",
+                        subject, effectiveTo, sendResult.getStatusCode(), sendResult.getMessage()))
+                .dataSnapshotJson(emailBody)
                 .userApproved(true)
                 .approvedBy(approvedBy != null ? approvedBy : "USER")
                 .timestamp(LocalDateTime.now())

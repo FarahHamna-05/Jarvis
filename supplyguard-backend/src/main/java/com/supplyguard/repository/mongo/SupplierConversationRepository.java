@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface SupplierConversationRepository extends MongoRepository<SupplierConversation, String> {
     List<SupplierConversation> findBySupplierIdOrderByUpdatedAtDesc(Long supplierId);
+    Optional<SupplierConversation> findFirstBySupplierIdOrderByUpdatedAtDesc(Long supplierId);
     Optional<SupplierConversation> findByRiskEventId(Long riskEventId);
     List<SupplierConversation> findAllByOrderByUpdatedAtDesc();
 }

@@ -28,6 +28,10 @@ public class SupplierConversation {
 
     private String threadSubject;
 
+    private String lastDeliveryStatus; // "sent" or "failed"
+    private String lastDeliveryDetails;
+    private LocalDateTime lastSentAt;
+
     @Builder.Default
     private List<ConversationMessage> messages = new ArrayList<>();
 
@@ -45,7 +49,11 @@ public class SupplierConversation {
         private String senderName;
         private String subject;
         private String body;
-        private String deliveryStatus; // DRAFT, PENDING_APPROVAL, SENT, RECEIVED
+        private String recipientEmail;
+        private String deliveryStatus; // DRAFT, PENDING_APPROVAL, SENT, FAILED, RECEIVED
+        private String status; // "sent", "failed" (explicitly conforming to MongoDB audit log spec)
+        private String deliveryDetails; // e.g. "SendGrid 202 Accepted | Message ID: ..." or error details
+        private LocalDateTime sentAt;
         private LocalDateTime timestamp;
     }
 }

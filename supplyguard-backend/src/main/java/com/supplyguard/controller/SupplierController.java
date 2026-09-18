@@ -17,6 +17,7 @@ import java.util.Map;
 public class SupplierController {
 
     private final SupplierService supplierService;
+    private final com.supplyguard.service.CommunicationService communicationService;
 
     @GetMapping
     public ResponseEntity<List<SupplierDto.Response>> getAllSuppliers() {
@@ -44,6 +45,38 @@ public class SupplierController {
     public ResponseEntity<SupplierDto.Response> toggleStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String newStatus = body.getOrDefault("status", "ACTIVE");
         return ResponseEntity.ok(supplierService.toggleStatus(id, newStatus));
+    }
+
+    @PostMapping("/{id}/contact")
+    public ResponseEntity<?> contactSupplier(
+            @PathVariable Long id,
+            @RequestParam(required = false) String toEmail,
+            @RequestParam(required = false) String customSubject,
+            @RequestParam(required = false) String subject,
+            @RequestParam(required = false) String customNotes,
+            @RequestParam(required = false) String productId,
+            @RequestParam(required = false) String approvedBy,
+            @RequestBody(required = false) Map<String, Object> contactPayload) {
+
+        String effToEmail = toEmail;
+        String effSubject = customSubject != null ? customSubject : subject;
+        String effCustomNotes = customNotes;
+        String effProductId = productId;
+        String effApprovedBy = (approvedBy != null && !approvedBy.trim().isEmpty()) ? approvedBy : "Operator";
+
+        if (contactPayload != null) {
+            if (contactPayload.get("toEmail") != null) effToEmail = (String) contactPayload.get("toEmail");
+            if (contactPayload.get("customSubject") != null) effSubject = (String) contactPayload.get("customSubject");
+            else if (contactPayload.get("subject") != null) effSubject = (String) contactPayload.get("subject");
+            if (contactPayload.get("customNotes") != null) effCustomNotes = (String) contactPayload.get("customNotes");
+            if (contactPayload.get("productId") != null) effProductId = String.valueOf(contactPayload.get("productId"));
+            if (contactPayload.get("approvedBy") != null) effApprovedBy = (String) contactPayload.get("approvedBy");
+        }
+
+        com.supplyguard.document.SupplierConversation convo = communicationService.contactSupplierOnDemand(
+                id, effToEmail, effSubject, effCustomNotes, effProductId, effApprovedBy
+        );
+        return ResponseEntity.ok(convo);
     }
 
     @DeleteMapping("/{id}")

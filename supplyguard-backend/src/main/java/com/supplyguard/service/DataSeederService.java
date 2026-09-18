@@ -9,6 +9,7 @@ import com.supplyguard.repository.mongo.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ import java.util.List;
 public class DataSeederService implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(DataSeederService.class);
+
+    @Value("${app.supplier.default-email:supplier.supplyguard@gmail.com}")
+    private String defaultSupplierEmail;
 
     private final UserRepository userRepository;
     private final SupplierRepository supplierRepository;
@@ -85,7 +89,7 @@ public class DataSeederService implements CommandLineRunner {
 
             Supplier s3 = supplierRepository.save(Supplier.builder()
                     .name("Shenzhen Opto-Tech Logistics")
-                    .contactEmail("sales@shenzhen-opto.cn")
+                    .contactEmail(defaultSupplierEmail != null ? defaultSupplierEmail : "supplier.supplyguard@gmail.com")
                     .phone("+86-755-8321-4400")
                     .region("Shenzhen, China")
                     .reliabilityScore(0.78)
@@ -203,6 +207,20 @@ public class DataSeederService implements CommandLineRunner {
                 riskEngineService.evaluateAllProducts();
                 logger.info("Initial risk evaluations completed!");
             }
+        } else {
+            // Auto-upgrade existing non-deliverable dummy supplier emails to default Gmail format
+            String targetEmail = (defaultSupplierEmail != null && !defaultSupplierEmail.isEmpty())
+                    ? defaultSupplierEmail
+                    : "supplier.supplyguard@gmail.com";
+
+            supplierRepository.findAll().forEach(sup -> {
+                if (sup.getContactEmail() != null &&
+                        (sup.getContactEmail().endsWith(".cn") || sup.getContactEmail().endsWith(".tw") || sup.getContactEmail().contains("example.com"))) {
+                    sup.setContactEmail(targetEmail);
+                    supplierRepository.save(sup);
+                    logger.info("Auto-upgraded supplier {} contact email to {}", sup.getName(), targetEmail);
+                }
+            });
         }
     }
 }

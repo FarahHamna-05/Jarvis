@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import apiClient from '../api/apiClient';
 import {
   Mail,
   Send,
@@ -8,7 +9,14 @@ import {
   Truck,
   MessageSquare,
   CheckCheck,
-  Search
+  Search,
+  AlertTriangle,
+  RefreshCw,
+  XCircle,
+  KeyRound,
+  ExternalLink,
+  X,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function CommunicationsInbox({
@@ -21,6 +29,78 @@ export default function CommunicationsInbox({
   const [replyInput, setReplyInput] = useState('');
   const [promisedDays, setPromisedDays] = useState(3);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sendingMessageId, setSendingMessageId] = useState(null);
+  const [recipientOverrides, setRecipientOverrides] = useState({});
+  const [saveAsDefaultSupplier, setSaveAsDefaultSupplier] = useState({});
+
+  // Gmail Sender Configuration State
+  const [isGmailModalOpen, setIsGmailModalOpen] = useState(false);
+  const [gmailUser, setGmailUser] = useState('');
+  const [gmailPass, setGmailPass] = useState('');
+  const [testRecipient, setTestRecipient] = useState('');
+  const [emailConfig, setEmailConfig] = useState(null);
+  const [isSavingGmail, setIsSavingGmail] = useState(false);
+  const [gmailFeedback, setGmailFeedback] = useState(null);
+
+  useEffect(() => {
+    fetchEmailConfig();
+  }, []);
+
+  const fetchEmailConfig = async () => {
+    try {
+      const res = await apiClient.get('/communications/email-config');
+      setEmailConfig(res.data);
+      if (res.data?.gmailUsername) {
+        setGmailUser(res.data.gmailUsername);
+      }
+    } catch (e) {
+      console.error('Failed to fetch email config:', e);
+    }
+  };
+
+  const handleSaveAndTestGmail = async (e) => {
+    e.preventDefault();
+    setIsSavingGmail(true);
+    setGmailFeedback(null);
+    try {
+      await apiClient.post('/communications/email-config', {
+        gmailUsername: gmailUser.trim(),
+        gmailAppPassword: gmailPass.trim()
+      });
+
+      if (testRecipient.trim()) {
+        const testRes = await apiClient.post('/communications/test-email', {
+          toEmail: testRecipient.trim(),
+          subject: 'SupplyGuard Real Gmail Delivery Test',
+          body: `Success! SupplyGuard is now authenticated and dispatching emails directly from your Gmail address (${gmailUser.trim()}) to supplier inboxes.`
+        });
+        if (testRes.data?.success) {
+          setGmailFeedback({
+            type: 'success',
+            text: `✅ Connected! Test email delivered to ${testRecipient.trim()} via Gmail SMTP.`
+          });
+        } else {
+          setGmailFeedback({
+            type: 'error',
+            text: testRes.data?.message || 'SMTP Authentication failed.'
+          });
+        }
+      } else {
+        setGmailFeedback({
+          type: 'success',
+          text: '✅ Gmail credentials saved! Outreach emails will now be sent directly from your authentic Gmail account.'
+        });
+      }
+      await fetchEmailConfig();
+    } catch (err) {
+      setGmailFeedback({
+        type: 'error',
+        text: err.response?.data?.message || err.message || 'Failed to configure Gmail.'
+      });
+    } finally {
+      setIsSavingGmail(false);
+    }
+  };
 
   const selectedConvo = conversations.find((c) => c.id === selectedConvoId) || conversations[0];
 
@@ -29,9 +109,24 @@ export default function CommunicationsInbox({
     c.threadSubject.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSendApproved = (messageId) => {
+  const handleSendApproved = async (messageId) => {
     if (onSendEmail && selectedConvo) {
-      onSendEmail(selectedConvo.id, messageId, currentUser?.username || 'Operator');
+      const overrideEmail = recipientOverrides[messageId] !== undefined
+        ? recipientOverrides[messageId]
+        : selectedConvo.supplierEmail;
+
+      setSendingMessageId(messageId);
+      try {
+        await onSendEmail(
+          selectedConvo.id,
+          messageId,
+          currentUser?.username || 'Operator',
+          overrideEmail,
+          saveAsDefaultSupplier[messageId] !== undefined ? saveAsDefaultSupplier[messageId] : true
+        );
+      } finally {
+        setSendingMessageId(null);
+      }
     }
   };
 
@@ -49,7 +144,7 @@ export default function CommunicationsInbox({
   return (
     <div className="space-y-4 text-slate-900">
       {/* Header */}
-      <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+      <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2.5">
             <MessageSquare className="h-5 w-5 text-[#E51A24] fill-current" />
@@ -59,8 +154,28 @@ export default function CommunicationsInbox({
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Human-in-the-loop autonomous procurement email drafts, negotiation transcripts, and webhook ingestion.
+            Real email delivery from your authentic Gmail account to the supplier's real inbox.
           </p>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          {emailConfig?.gmailConfigured ? (
+            <button
+              onClick={() => setIsGmailModalOpen(true)}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-xs hover:bg-emerald-100 transition cursor-pointer"
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Gmail: {emailConfig.gmailUsername}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsGmailModalOpen(true)}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-[#E51A24] text-xs font-bold shadow-xs transition cursor-pointer"
+            >
+              <KeyRound className="h-3.5 w-3.5" />
+              <span>Connect Real Gmail Sender</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -182,6 +297,8 @@ export default function CommunicationsInbox({
                   {selectedConvo.messages?.map((msg) => {
                     const isAI = msg.sender === 'AI';
                     const isPending = msg.deliveryStatus === 'PENDING_APPROVAL';
+                    const isSent = msg.deliveryStatus === 'SENT' || msg.deliveryStatus === 'sent' || msg.status === 'sent';
+                    const isFailed = msg.deliveryStatus === 'FAILED' || msg.deliveryStatus === 'failed' || msg.status === 'failed';
 
                     return (
                       <div
@@ -200,10 +317,12 @@ export default function CommunicationsInbox({
                             <span className={isAI ? 'text-[#E51A24]' : 'text-slate-700'}>
                               {msg.senderName || (isAI ? 'SupplyGuard Autonomous Agent' : selectedConvo.supplierName)}
                             </span>
-                            <span className={`text-[9px] uppercase ml-2 px-1.5 py-0.5 rounded ${
+                            <span className={`text-[9px] uppercase ml-2 px-2 py-0.5 rounded-full font-bold ${
+                              isSent ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                              isFailed ? 'bg-red-100 text-[#E51A24] border border-red-300' :
                               isAI ? 'bg-red-100 text-[#E51A24]' : 'bg-slate-100 text-slate-600'
                             }`}>
-                              {msg.deliveryStatus}
+                              {isSent ? '✅ SENT' : isFailed ? '❌ FAILED' : msg.deliveryStatus}
                             </span>
                           </div>
 
@@ -218,24 +337,119 @@ export default function CommunicationsInbox({
                               {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
                             </span>
                             {isAI && (
-                              <CheckCheck className="h-3.5 w-3.5 stroke-[2] text-[#E51A24]" />
+                              <CheckCheck className={`h-3.5 w-3.5 stroke-[2] ${isSent ? 'text-emerald-600' : 'text-[#E51A24]'}`} />
                             )}
                           </div>
 
+                          {/* Real SendGrid Confirmed Sent Status */}
+                          {isSent && (
+                            <div className="mt-2.5 pt-2 border-t border-emerald-200/80 flex items-center justify-between text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 shadow-xs">
+                              <span className="flex items-center space-x-1.5 truncate">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                <span className="truncate">
+                                  ✅ Sent to <span className="underline font-mono">{msg.recipientEmail || selectedConvo.supplierEmail}</span> at{' '}
+                                  {new Date(msg.sentAt || msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </span>
+                              <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-200/70 text-emerald-900 shrink-0 ml-2 font-bold">
+                                {msg.deliveryDetails?.toLowerCase().includes('gmail') || emailConfig?.gmailConfigured ? 'Gmail SMTP 250 OK' : 'SendGrid 202'}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Delivery Failure Alert */}
+                          {isFailed && (
+                            <div className="mt-2.5 pt-2 border-t border-red-200 space-y-2 bg-red-50/90 p-3 rounded-xl border border-red-200">
+                              <div className="flex items-start space-x-2 text-[#E51A24] font-bold text-[11px]">
+                                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="block font-bold">❌ Delivery Failed</span>
+                                  <span className="text-[10px] font-normal text-slate-700 block mt-0.5 leading-relaxed">
+                                    {msg.deliveryDetails || 'Invalid credentials or connection error. Click "Connect Real Gmail Sender" above to enable authentic sending.'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="pt-2 border-t border-red-100 space-y-1.5">
+                                <span className="text-[10px] text-slate-600 block">Edit recipient address to retry delivery:</span>
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="email"
+                                    value={recipientOverrides[msg.id] !== undefined ? recipientOverrides[msg.id] : (msg.recipientEmail || selectedConvo.supplierEmail || '')}
+                                    onChange={(e) => setRecipientOverrides({ ...recipientOverrides, [msg.id]: e.target.value })}
+                                    placeholder="supplier@gmail.com"
+                                    className="flex-1 text-xs font-mono px-2.5 py-1.5 rounded-lg border border-red-200 bg-white text-slate-900 focus:outline-none focus:border-[#E51A24]"
+                                  />
+                                  <button
+                                    disabled={sendingMessageId === msg.id}
+                                    onClick={() => handleSendApproved(msg.id)}
+                                    className="px-3.5 py-1.5 bg-[#E51A24] hover:bg-[#C91822] text-white rounded-lg text-[11px] font-bold transition flex items-center space-x-1 disabled:opacity-50 cursor-pointer shadow-xs shrink-0"
+                                  >
+                                    <RefreshCw className={`h-3 w-3 ${sendingMessageId === msg.id ? 'animate-spin' : ''}`} />
+                                    <span>{sendingMessageId === msg.id ? 'Retrying...' : 'Retry Dispatch'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Human Approval Action on Draft */}
                           {isPending && (
-                            <div className="mt-3 pt-3 border-t border-red-200 flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-[#E51A24] flex items-center space-x-1">
-                                <Clock className="h-3.5 w-3.5" />
-                                <span>Pending Sign-Off</span>
-                              </span>
-                              <button
-                                onClick={() => handleSendApproved(msg.id)}
-                                className="flex items-center space-x-1.5 rounded-full bg-[#E51A24] hover:bg-[#C91822] text-white font-bold px-3.5 py-1.5 text-xs shadow-sm transition hover:scale-105"
-                              >
-                                <Send className="h-3 w-3" />
-                                <span>Authorize & Dispatch</span>
-                              </button>
+                            <div className="mt-3 pt-3 border-t border-red-200 space-y-2.5">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="font-bold text-[#E51A24] flex items-center space-x-1">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  <span>Pending Sign-Off</span>
+                                </span>
+                                <span className="text-[10px] text-emerald-700 font-mono font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center space-x-1">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  <span>From: {emailConfig?.gmailUsername || 'freefiregodtamil@gmail.com'}</span>
+                                </span>
+                              </div>
+
+                              {/* Destination Email Override Field */}
+                              <div className="rounded-xl bg-white p-2.5 border border-red-200/80 space-y-2">
+                                <div className="flex items-center justify-between text-[10px]">
+                                  <span className="font-bold text-slate-700">Recipient Supplier Gmail Address:</span>
+                                  <span className="text-[9px] text-emerald-600 font-semibold">Live delivery target</span>
+                                </div>
+                                <input
+                                  type="email"
+                                  value={recipientOverrides[msg.id] !== undefined ? recipientOverrides[msg.id] : (selectedConvo.supplierEmail || '')}
+                                  onChange={(e) => setRecipientOverrides({ ...recipientOverrides, [msg.id]: e.target.value })}
+                                  placeholder="e.g. supplier@gmail.com"
+                                  className="w-full text-xs font-mono font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-[#E51A24]"
+                                />
+                                <label className="flex items-center space-x-2 text-[10px] font-semibold text-slate-600 cursor-pointer pt-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={saveAsDefaultSupplier[msg.id] !== undefined ? saveAsDefaultSupplier[msg.id] : true}
+                                    onChange={(e) => setSaveAsDefaultSupplier({ ...saveAsDefaultSupplier, [msg.id]: e.target.checked })}
+                                    className="rounded border-slate-300 text-[#E51A24] focus:ring-red-200"
+                                  />
+                                  <span>Save as {selectedConvo.supplierName}'s permanent contact Gmail in directory</span>
+                                </label>
+                              </div>
+
+                              <div className="flex items-center justify-end">
+                                <button
+                                  disabled={sendingMessageId === msg.id}
+                                  onClick={() => handleSendApproved(msg.id)}
+                                  className="flex items-center space-x-1.5 rounded-xl bg-[#E51A24] hover:bg-[#C91822] text-white font-bold px-4 py-2 text-xs shadow-sm transition hover:scale-102 disabled:opacity-50 cursor-pointer"
+                                >
+                                  {sendingMessageId === msg.id ? (
+                                    <>
+                                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                      <span>Dispatching via Gmail SMTP...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="h-3.5 w-3.5" />
+                                      <span>Authorize & Dispatch from freefiregodtamil@gmail.com</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -290,6 +504,144 @@ export default function CommunicationsInbox({
             )}
           </div>
 
+        </div>
+      )}
+
+      {/* Real Gmail Connection Modal */}
+      {isGmailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 space-y-5 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-[#E51A24] shadow-xs">
+                  <Mail className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Connect Real Gmail Sender
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Send authentic emails directly from your Gmail to the supplier's inbox
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsGmailModalOpen(false);
+                  setGmailFeedback(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Step-by-Step Instructions Banner */}
+            <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 text-xs text-amber-900 space-y-1.5">
+              <div className="font-bold flex items-center space-x-1.5 text-amber-950">
+                <ShieldCheck className="h-4 w-4 text-amber-600" />
+                <span>How to get your 16-Character Google App Password:</span>
+              </div>
+              <ol className="list-decimal list-inside text-[11px] text-amber-800 space-y-1 pl-1">
+                <li>Go to your <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer" className="underline font-bold text-amber-950 inline-flex items-center space-x-0.5"><span>Google Account Security</span><ExternalLink className="h-2.5 w-2.5 ml-0.5 inline" /></a></li>
+                <li>Ensure <strong>2-Step Verification</strong> is enabled</li>
+                <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="underline font-bold text-amber-950 inline-flex items-center space-x-0.5"><span>App Passwords</span><ExternalLink className="h-2.5 w-2.5 ml-0.5 inline" /></a> and generate an app named <strong>"SupplyGuard"</strong></li>
+                <li>Copy the 16-character password (e.g. <code className="font-mono bg-amber-100 px-1 py-0.5 rounded">abcd efgh ijkl mnop</code>)</li>
+              </ol>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveAndTestGmail} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Your Gmail Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={gmailUser}
+                  onChange={(e) => setGmailUser(e.target.value)}
+                  placeholder="e.g. yourname@gmail.com"
+                  className="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Google App Password (16 characters)
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={gmailPass}
+                  onChange={(e) => setGmailPass(e.target.value)}
+                  placeholder="e.g. abcd efgh ijkl mnop"
+                  className="w-full text-xs font-mono px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 transition"
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Spaces are automatically stripped before authenticating with Google SMTP.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Send Instant Test Email To (Optional)
+                </label>
+                <input
+                  type="email"
+                  value={testRecipient}
+                  onChange={(e) => setTestRecipient(e.target.value)}
+                  placeholder="e.g. supplier@gmail.com or your_other_email@gmail.com"
+                  className="w-full text-xs font-mono px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 transition"
+                />
+              </div>
+
+              {/* Feedback Message */}
+              {gmailFeedback && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-medium border ${
+                    gmailFeedback.type === 'success'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                      : 'bg-red-50 border-red-200 text-[#E51A24]'
+                  }`}
+                >
+                  {gmailFeedback.text}
+                </div>
+              )}
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsGmailModalOpen(false);
+                    setGmailFeedback(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingGmail}
+                  className="flex items-center space-x-1.5 px-5 py-2.5 rounded-xl bg-[#E51A24] hover:bg-[#C91822] text-white text-xs font-bold shadow-md transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isSavingGmail ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Verifying with Google...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span>Save & Test Real Gmail</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

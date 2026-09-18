@@ -30,14 +30,22 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    username: ${MAIL_USERNAME:freefiregodtamil@gmail.com}
+    password: ${MAIL_PASSWORD:nfivttulpjbfzowr}
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+
+# SendGrid API Real Email Delivery Configuration
+sendgrid:
+  api:
+    key: ${SENDGRID_API_KEY:SG.placeholder_api_key}
+  from:
+    email: ${SENDGRID_FROM_EMAIL:alerts@supplyguard.ai}
+    name: ${SENDGRID_FROM_NAME:SupplyGuard Autonomous Procurement}
 
 # Security & JWT
 app:
