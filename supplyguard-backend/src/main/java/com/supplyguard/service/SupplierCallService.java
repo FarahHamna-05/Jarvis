@@ -56,7 +56,7 @@ public class SupplierCallService {
                                    String productName, int requiredQuantity,
                                    String supplierId, String productId) {
         LocalDateTime now = LocalDateTime.now();
-        String cleanPhone = supplierPhoneNumber != null ? supplierPhoneNumber.trim() : "";
+        String cleanPhone = normalizePhoneNumber(supplierPhoneNumber);
         String safeMerchant = (merchantName != null && !merchantName.trim().isEmpty()) ? merchantName : "SupplyGuard Merchant";
         String safeProduct = (productName != null && !productName.trim().isEmpty()) ? productName : "Critical Component";
 
@@ -179,5 +179,32 @@ public class SupplierCallService {
 
             return pendingCallRepository.save(failedCall);
         }
+    }
+
+    /**
+     * Normalizes phone numbers to standard E.164 format (+[country_code][number]).
+     * Automatically handles Indian numbers (10 digits, with/without 0 or +91).
+     */
+    public static String normalizePhoneNumber(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return "";
+        }
+        String cleaned = raw.replaceAll("[^0-9+]", "");
+        if (cleaned.startsWith("+")) {
+            return cleaned;
+        }
+        // Indian 10-digit mobile number -> prepend +91
+        if (cleaned.length() == 10) {
+            return "+91" + cleaned;
+        }
+        // Indian number with leading 0 (09876543210) -> strip 0 and prepend +91
+        if (cleaned.startsWith("0") && cleaned.length() == 11) {
+            return "+91" + cleaned.substring(1);
+        }
+        // Indian number starting with 91 without plus (919876543210) -> prepend +
+        if (cleaned.startsWith("91") && cleaned.length() == 12) {
+            return "+" + cleaned;
+        }
+        return "+" + cleaned;
     }
 }
