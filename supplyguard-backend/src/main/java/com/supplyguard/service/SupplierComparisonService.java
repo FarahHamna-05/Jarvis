@@ -289,4 +289,30 @@ public class SupplierComparisonService {
         auditLogRepository.save(log);
         logger.info("Saved audit log for voice sourcing approval: Supplier {} for Product {}", supplier.getName(), product.getName());
     }
+
+    /**
+     * Dispatches an interactive demo call to any specified phone number (e.g. evaluator's Indian mobile).
+     */
+    public PendingCall dispatchCustomDemoCall(String productId, String phoneNumber, String supplierName, int requiredQuantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+
+        String merchantName = businessProfileRepository.findAll().stream()
+                .findFirst()
+                .map(BusinessProfile::getBusinessName)
+                .filter(name -> name != null && !name.trim().isEmpty())
+                .orElse("SupplyGuard Autonomous Procurement");
+
+        String name = (supplierName != null && !supplierName.trim().isEmpty()) ? supplierName : "Demo Indian Supplier";
+        int demand = requiredQuantity > 0 ? requiredQuantity : 100;
+
+        return supplierCallService.initiateCall(
+                phoneNumber,
+                merchantName,
+                product.getName(),
+                demand,
+                "demo-" + UUID.randomUUID().toString().substring(0, 6),
+                product.getId()
+        );
+    }
 }

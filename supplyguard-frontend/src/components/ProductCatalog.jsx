@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import apiClient from '../api/apiClient';
+import { showToast } from '../utils/toast';
 import {
   Boxes,
   Plus,
@@ -13,13 +15,27 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  RefreshCw,
+  X,
+  ShieldAlert,
+  FileText,
+  Check,
+  Volume2,
+  Play,
+  Radio,
+  PhoneCall,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Briefcase,
+  ArrowRight,
+  MapPin,
+  Clock,
+  Flame
 } from 'lucide-react';
-import { FiBriefcase } from 'react-icons/fi';
-import { FaArrowRight, FaMapMarkerAlt, FaClock, FaFire } from 'react-icons/fa';
-import { HiSparkles } from 'react-icons/hi';
 import { motion, useMotionValue } from 'motion/react';
-import { cn } from '@/lib/utils';
+import { cn } from '../lib/utils';
 
 const MAX_DRAG = 120;
 
@@ -92,6 +108,27 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [viewMode, setViewMode] = useState('list'); // 'list', 'stack', or 'grid'
 
+  // AI Voice Sourcing State
+  const [voiceModalProduct, setVoiceModalProduct] = useState(null);
+  const [requiredQuantity, setRequiredQuantity] = useState(50);
+  const [isCallingSuppliers, setIsCallingSuppliers] = useState(false);
+  const [initiatedCalls, setInitiatedCalls] = useState([]);
+  const [comparisonData, setComparisonData] = useState(null);
+  const [isPollingComparison, setIsPollingComparison] = useState(false);
+  const [activeTranscriptModal, setActiveTranscriptModal] = useState(null);
+  const [approvingSupplierId, setApprovingSupplierId] = useState(null);
+  const [approvalSuccess, setApprovalSuccess] = useState(null);
+  const [isSimulatingWebhook, setIsSimulatingWebhook] = useState(false);
+
+  // Live Demo Call Option States
+  const [sourcingMode, setSourcingMode] = useState('suppliers'); // 'suppliers' | 'demo'
+  const [demoPhoneNumber, setDemoPhoneNumber] = useState('+91');
+  const [demoSupplierName, setDemoSupplierName] = useState('Apex Microelectronics India');
+  const [isCallingDemo, setIsCallingDemo] = useState(false);
+  const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+
+  const pollingRef = useRef(null);
+
   const categories = ['ALL', ...new Set(products.map((p) => p.category).filter(Boolean))];
 
   const filteredProducts = products.filter((p) => {
@@ -104,6 +141,290 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
 
   const [stackCards, setStackCards] = useState(filteredProducts);
 
+  // Fetch comparison data for a product
+  const fetchComparison = useCallback(async (productId, silent = false) => {
+    try {
+      const res = await apiClient.get(`/products/${productId}/supplier-comparison`);
+      if (res.data) {
+        setComparisonData(res.data);
+        if (res.data.allCompleted && res.data.responsesReceived > 0) {
+          setIsPollingComparison(false);
+        }
+        return res.data;
+      }
+    } catch (err) {
+      if (!silent) {
+        console.warn('Could not fetch supplier comparison:', err);
+      }
+    }
+    return null;
+  }, []);
+  // Open the AI Voice Sourcing Modal (supports setting initial mode to 'demo' or 'suppliers')
+  const handleOpenVoiceModal = (product, defaultMode = 'suppliers') => {
+    setVoiceModalProduct(product);
+    setSourcingMode(defaultMode);
+    const deficit = Math.max(10, (product.reorderThreshold || 50) - (product.currentStock || 0));
+    setRequiredQuantity(deficit > 0 ? deficit : 50);
+    setInitiatedCalls([]);
+    setApprovalSuccess(null);
+    setActiveTranscriptModal(null);
+    setIsPollingComparison(false);
+
+    // Initial check if comparison already exists
+    fetchComparison(product.id, true);
+  };
+
+  // Close modal and stop polling / speech
+  const handleCloseVoiceModal = () => {
+    setVoiceModalProduct(null);
+    setIsPollingComparison(false);
+    setIsSpeakingAudio(false);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
+  // Trigger Custom Live Demo Call to user's phone
+  const handleTriggerDemoCall = async () => {
+    if (!voiceModalProduct || !demoPhoneNumber || demoPhoneNumber.trim().length < 6) {
+      showToast({
+        title: 'Valid Phone Required',
+        description: 'Please enter a valid phone number (e.g. +91 98765 43210 or 9876543210).',
+        type: 'warning'
+      });
+      return;
+    }
+
+    setIsCallingDemo(true);
+    setApprovalSuccess(null);
+
+    try {
+      const res = await apiClient.post(`/products/${voiceModalProduct.id}/demo-call`, {
+        phoneNumber: demoPhoneNumber.trim(),
+        supplierName: demoSupplierName.trim(),
+        requiredQuantity: requiredQuantity
+      });
+
+      const call = res.data;
+      setInitiatedCalls((prev) => [
+        {
+          callId: call.vapiCallId || call.id,
+          supplierName: demoSupplierName || 'Demo Indian Supplier',
+          phoneNumber: call.supplierPhone || demoPhoneNumber,
+          status: call.status || 'CALLING'
+        },
+        ...prev
+      ]);
+
+      showToast({
+        title: 'Demo Call Dispatched!',
+        description: `Vapi AI is dialing ${demoPhoneNumber}. Please pick up your phone!`,
+        type: 'success'
+      });
+
+      setIsPollingComparison(true);
+      fetchComparison(voiceModalProduct.id, true);
+    } catch (err) {
+      console.error('Failed to trigger demo call:', err);
+      showToast({
+        title: 'Demo Call Error',
+        description: err.response?.data?.message || 'Unable to place live demo call.',
+        type: 'critical'
+      });
+    } finally {
+      setIsCallingDemo(false);
+    }
+  };
+
+  // Play Spoken AI Voice Dialogue Simulation using Browser SpeechSynthesis
+  const handlePlayAudioSimulation = async () => {
+    if (typeof window === 'undefined') return;
+    setIsSpeakingAudio(true);
+
+    const prodName = voiceModalProduct ? voiceModalProduct.name : 'Components';
+    const script = [
+      {
+        speaker: 'AI Assistant',
+        text: `Hello! I am calling from SupplyGuard Autonomous Procurement. We are verifying stock availability for ${prodName}. Do you currently have ${requiredQuantity} units ready for immediate dispatch?`
+      },
+      {
+        speaker: 'Supplier',
+        text: `Yes, we have verified inventory of ${requiredQuantity + 50} units ready at our Bangalore facility. We can deliver within 3 business days at 39 dollars and 50 cents per unit.`
+      },
+      {
+        speaker: 'AI Assistant',
+        text: `Confirmed. I have logged 3-day lead time at 39 dollars and 50 cents per unit in SupplyGuard procurement radar. Thank you!`
+      }
+    ];
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      let index = 0;
+      const speakNext = () => {
+        if (index < script.length) {
+          const item = script[index];
+          const utter = new SpeechSynthesisUtterance(item.text);
+          utter.rate = 1.0;
+          utter.pitch = item.speaker === 'AI Assistant' ? 1.05 : 0.95;
+          utter.onend = () => {
+            index++;
+            speakNext();
+          };
+          window.speechSynthesis.speak(utter);
+        } else {
+          setIsSpeakingAudio(false);
+          handleSimulateWebhook();
+        }
+      };
+      speakNext();
+    } else {
+      setTimeout(() => {
+        setIsSpeakingAudio(false);
+        handleSimulateWebhook();
+      }, 1200);
+    }
+  };
+
+  // Trigger Outbound AI Voice Calls via Vapi
+  const handleTriggerVoiceCalls = async () => {
+    if (!voiceModalProduct) return;
+    setIsCallingSuppliers(true);
+    setApprovalSuccess(null);
+
+    try {
+      const res = await apiClient.post(
+        `/products/${voiceModalProduct.id}/check-suppliers?requiredQuantity=${requiredQuantity}`
+      );
+      setInitiatedCalls(res.data || []);
+
+      showToast({
+        title: 'AI Voice Sourcing Dispatched',
+        description: `Triggered Vapi AI voice calls to ${res.data?.length || 0} alternate supplier(s).`,
+        type: 'info'
+      });
+
+      // Start automatic polling every 3.5 seconds
+      setIsPollingComparison(true);
+      fetchComparison(voiceModalProduct.id, true);
+    } catch (err) {
+      console.error('Failed to trigger supplier calls:', err);
+      showToast({
+        title: 'Call Initiation Error',
+        description: err.response?.data?.message || 'Unable to trigger voice calls to suppliers.',
+        type: 'critical'
+      });
+    } finally {
+      setIsCallingSuppliers(false);
+    }
+  };
+
+  // Polling loop for active calls & comparison
+  useEffect(() => {
+    if (isPollingComparison && voiceModalProduct) {
+      pollingRef.current = setInterval(async () => {
+        const data = await fetchComparison(voiceModalProduct.id, true);
+        if (data && data.allCompleted && data.responsesReceived > 0) {
+          setIsPollingComparison(false);
+          showToast({
+            title: 'Sourcing Evaluation Complete',
+            description: 'All supplier responses received and ranked by SupplyGuard AI.',
+            type: 'success'
+          });
+        }
+      }, 3500);
+
+      return () => {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      };
+    }
+  }, [isPollingComparison, voiceModalProduct, fetchComparison]);
+
+  // Approve a supplier as the new primary
+  const handleApproveSupplier = async (supplier) => {
+    if (!voiceModalProduct || !supplier) return;
+    setApprovingSupplierId(supplier.supplierId);
+
+    try {
+      const payload = {
+        supplierId: supplier.supplierId,
+        callId: supplier.callId || null,
+        approvedQuantity: supplier.stockQuantity || requiredQuantity,
+        agreedPrice: supplier.pricePerUnit || null,
+        notes: `Approved via autonomous AI voice call comparison. Rank #${supplier.rank}.`
+      };
+
+      const res = await apiClient.post(`/products/${voiceModalProduct.id}/approve-supplier`, payload);
+      setApprovalSuccess(res.data);
+
+      showToast({
+        title: 'Supplier Approved!',
+        description: `${supplier.supplierName} is now the primary supplier for ${voiceModalProduct.name}.`,
+        type: 'success'
+      });
+    } catch (err) {
+      console.error('Failed to approve supplier:', err);
+      showToast({
+        title: 'Approval Error',
+        description: err.response?.data?.message || 'Failed to update primary supplier.',
+        type: 'critical'
+      });
+    } finally {
+      setApprovingSupplierId(null);
+    }
+  };
+
+  // Trigger simulated webhook for rapid testing/demos
+  const handleSimulateWebhook = async (callId) => {
+    setIsSimulatingWebhook(true);
+    try {
+      const mockPayload = {
+        message: {
+          type: 'end-of-call-report',
+          call: {
+            id: callId || (initiatedCalls[0] ? initiatedCalls[0].callId : 'sim-call-manual')
+          },
+          structuredData: {
+            availability: true,
+            stockQuantity: requiredQuantity + 50,
+            deliveryDays: 3,
+            pricePerUnit: 39.5,
+            interested: true
+          },
+          transcript:
+            'AI Assistant: Hello, I am calling from Procurement regarding component availability. Do you have stock available? ' +
+            'Supplier: Yes, we currently have ready inventory of 150 units. We can dispatch within 3 business days at $39.50 per unit. ' +
+            'AI Assistant: Thank you, I have logged these terms in our procurement system.'
+        }
+      };
+
+      await apiClient.post('/calls/webhook', mockPayload);
+      showToast({
+        title: 'Webhook Sim Ingested',
+        description: 'Simulated Vapi end-of-call report ingested successfully.',
+        type: 'info'
+      });
+
+      if (voiceModalProduct) {
+        await fetchComparison(voiceModalProduct.id);
+      }
+    } catch (err) {
+      console.error('Webhook sim failed:', err);
+      showToast({
+        title: 'Simulation Error',
+        description: 'Failed to ingest simulated webhook.',
+        type: 'warning'
+      });
+    } finally {
+      setIsSimulatingWebhook(false);
+    }
+  };
   useEffect(() => {
     setStackCards(filteredProducts);
   }, [filteredProducts]);
@@ -148,7 +469,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
           <div className="space-y-3 max-w-2xl">
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50/90 px-3 py-1 text-xs font-semibold text-[#0F172A]">
-              <HiSparkles className="size-3.5 text-[#E51A24]" />
+              <Sparkles className="size-3.5 text-[#E51A24]" />
               <span>Continuous Inventory Telemetry</span>
             </div>
 
@@ -250,6 +571,19 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
               <span>AI Draft SKU</span>
             </button>
 
+            {/* Live Demo Call Button */}
+            {products.length > 0 && (
+              <button
+                type="button"
+                onClick={() => handleOpenVoiceModal(products[0], 'demo')}
+                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm hover:shadow transition cursor-pointer active:scale-95 whitespace-nowrap"
+                title="Dial your phone or simulate AI voice supplier call"
+              >
+                <PhoneCall className="h-3.5 w-3.5" />
+                <span>Launch Demo Call</span>
+              </button>
+            )}
+
             {/* Primary Add SKU Button */}
             <button
               onClick={() => onOpenAddProduct && onOpenAddProduct()}
@@ -340,7 +674,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
 
                       {isHot && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-600 border border-amber-200">
-                          <FaFire className="size-2.5" />
+                          <Flame className="size-2.5" />
                           Critical Stockout
                         </span>
                       )}
@@ -359,7 +693,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
                   <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:shrink-0">
                     {/* Supplier Pill with MapMarker */}
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50/80 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      <FaMapMarkerAlt className="size-2.5 shrink-0" />
+                      <MapPin className="size-2.5 shrink-0" />
                       <span className="truncate max-w-[130px]">
                         {product.primarySupplierName || 'Unassigned'}
                       </span>
@@ -367,7 +701,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
 
                     {/* Stock Pill with Clock */}
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                      <FaClock className="size-2.5 shrink-0" />
+                      <Clock className="size-2.5 shrink-0" />
                       <span>{product.currentStock} units on-hand</span>
                     </span>
 
@@ -413,7 +747,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
                       className="ml-auto flex size-7 sm:size-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all duration-300 group-hover:bg-slate-900 group-hover:text-white cursor-pointer"
                       title="Inspect SKU Specifications"
                     >
-                      <FaArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+                      <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" />
                     </button>
                   </div>
                 </li>
@@ -777,6 +1111,32 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
                     </span>
                   </div>
                 </div>
+                {/* AI Voice Call Action Button & Demo Shortcut */}
+                <div className="flex items-center space-x-1.5">
+                  <button
+                    onClick={() => handleOpenVoiceModal(product, 'suppliers')}
+                    className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs shadow-sm transition group/btn ${
+                      isAtRisk || product.primarySupplierStatus === 'DISRUPTED'
+                        ? 'bg-gradient-to-r from-[#E51A24] via-rose-600 to-[#C91822] text-white hover:brightness-110 shadow-red-200 animate-pulse'
+                        : 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-200'
+                    }`}
+                  >
+                    <PhoneCall className="h-3.5 w-3.5 text-red-300 group-hover/btn:scale-110 transition-transform" />
+                    <span>
+                      {product.primarySupplierStatus === 'DISRUPTED'
+                        ? 'Disrupted • AI Sourcing'
+                        : 'AI Voice Sourcing'}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleOpenVoiceModal(product, 'demo')}
+                    title="Interactive Demo Call (Direct Phone / Browser Audio)"
+                    className="flex items-center space-x-1 py-2.5 px-3 rounded-xl font-bold text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition shrink-0 cursor-pointer"
+                  >
+                    <Radio className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Demo</span>
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -787,7 +1147,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
       <div className="mt-6 flex flex-col items-start gap-3 rounded-2xl border border-slate-200/90 bg-slate-50/90 p-5 sm:p-6 sm:flex-row sm:items-center sm:justify-between shadow-xs">
         <div className="flex items-center gap-3.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-700 shadow-xs">
-            <FiBriefcase className="size-4" />
+            <Briefcase className="size-4" />
           </span>
           <div>
             <p className="text-sm font-semibold text-slate-900">
@@ -804,9 +1164,636 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#E51A24] hover:text-[#C91822] hover:underline underline-offset-4 transition-all cursor-pointer whitespace-nowrap"
         >
           <span>Onboard New Product SKU</span>
-          <FaArrowRight className="size-3" />
+          <ArrowRight className="size-3" />
         </button>
       </div>
+
+      {/* AI Voice Call Sourcing Modal */}
+      {voiceModalProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-900 text-white">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-[#E51A24] to-rose-600 flex items-center justify-center shadow-inner">
+                  <PhoneCall className="h-5 w-5 text-white animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-base font-bold text-white">Autonomous AI Voice Sourcing</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[10px] font-semibold border border-red-500/30 flex items-center space-x-1">
+                      <Sparkles className="h-2.5 w-2.5" />
+                      <span>Vapi Integration</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Product: <strong className="text-white">{voiceModalProduct.name}</strong> • Current Stock:{' '}
+                    <span className="font-mono text-white">{voiceModalProduct.currentStock}</span> • Threshold:{' '}
+                    <span className="font-mono text-white">{voiceModalProduct.reorderThreshold || 50}</span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleCloseVoiceModal}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+              {/* Approval Success Banner */}
+              {approvalSuccess && (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 flex items-start space-x-3 text-emerald-900">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 text-xs">
+                    <p className="font-bold text-emerald-800 text-sm">Primary Supplier Successfully Replaced!</p>
+                    <p className="mt-1 text-emerald-700">{approvalSuccess.message}</p>
+                    <div className="mt-2 flex items-center space-x-4 font-mono text-[11px] text-emerald-800">
+                      <span>New Primary: <strong>{approvalSuccess.approvedSupplierName}</strong></span>
+                      <span>Lead Time: <strong>{approvalSuccess.newLeadTimeDays} days</strong></span>
+                      {approvalSuccess.newCostPerUnit && (
+                        <span>Unit Cost: <strong>${approvalSuccess.newCostPerUnit}</strong></span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sourcing Parameters Card */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                {/* Mode Selector Tabs */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setSourcingMode('suppliers')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        sourcingMode === 'suppliers'
+                          ? 'bg-slate-900 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      <PhoneCall className="h-3.5 w-3.5" />
+                      <span>All Alternate Suppliers Fleet</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSourcingMode('demo')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        sourcingMode === 'demo'
+                          ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-200'
+                          : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                      }`}
+                    >
+                      <Radio className="h-3.5 w-3.5" />
+                      <span>Interactive Demo Call</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-emerald-700 text-white rounded-full font-mono">
+                        Live / Audio
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <label className="text-xs font-bold text-slate-700 whitespace-nowrap">Target Quantity:</label>
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="number"
+                        min="1"
+                        value={requiredQuantity}
+                        onChange={(e) => setRequiredQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-20 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-mono font-bold text-slate-900 focus:border-[#E51A24] focus:outline-none"
+                      />
+                      <span className="text-xs text-slate-500 font-medium">units</span>
+                    </div>
+                  </div>
+                </div>
+
+                {sourcingMode === 'suppliers' ? (
+                  <>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          Step 1: Configure Sourcing Target
+                        </h4>
+                        <p className="text-xs text-slate-600 mt-0.5">
+                          Vapi will autonomously dial registered alternate suppliers for {voiceModalProduct.name} to check live inventory, delivery schedules, and negotiate pricing.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quick preset buttons */}
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 flex-wrap gap-2">
+                      <div className="flex items-center space-x-1 text-xs text-slate-500">
+                        <span className="text-[11px]">Presets:</span>
+                        {[25, 50, 100, 200].map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => setRequiredQuantity(preset)}
+                            className={`px-2 py-1 rounded-lg text-[11px] font-mono font-semibold transition cursor-pointer ${
+                              requiredQuantity === preset
+                                ? 'bg-slate-900 text-white'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {preset}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Trigger Outbound Calls Button */}
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={handleTriggerVoiceCalls}
+                          disabled={isCallingSuppliers || isPollingComparison}
+                          className="flex items-center space-x-2 rounded-xl bg-[#E51A24] hover:bg-[#C91822] disabled:opacity-60 text-white font-bold px-4 py-2 text-xs shadow-sm transition cursor-pointer"
+                        >
+                          {isCallingSuppliers ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Dispatching Vapi Telephony...</span>
+                            </>
+                          ) : (
+                            <>
+                              <PhoneCall className="h-4 w-4" />
+                              <span>Initiate AI Voice Calls ({requiredQuantity} units)</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* Demo Call Panel */
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3.5 text-xs text-emerald-950">
+                      <div className="flex items-center space-x-2 font-bold text-emerald-900 mb-1">
+                        <Radio className="h-4 w-4 text-emerald-600 animate-pulse" />
+                        <span>Interactive Demo Call Mode</span>
+                      </div>
+                      <p className="text-emerald-800">
+                        Experience Vapi AI voice calls live! Receive a real call on your phone (supporting Indian <code className="font-mono bg-emerald-100 px-1 rounded">+91XXXXXXXXXX</code> numbers), or listen to the AI voice dialogue aloud directly in your browser.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Phone Number (to receive call):
+                        </label>
+                        <div className="space-y-1.5">
+                          <input
+                            type="tel"
+                            value={demoPhoneNumber}
+                            onChange={(e) => setDemoPhoneNumber(e.target.value)}
+                            placeholder="+91 98765 43210 or 9876543210"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                          />
+                          <div className="flex items-center space-x-1">
+                            <span className="text-[10px] text-slate-400">Quick prefix:</span>
+                            <button
+                              type="button"
+                              onClick={() => setDemoPhoneNumber('+91')}
+                              className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-[10px] font-mono font-semibold text-slate-700 cursor-pointer"
+                            >
+                              +91 (India)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDemoPhoneNumber('+1')}
+                              className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-[10px] font-mono font-semibold text-slate-700 cursor-pointer"
+                            >
+                              +1 (US)
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Supplier Persona Name:
+                        </label>
+                        <input
+                          type="text"
+                          value={demoSupplierName}
+                          onChange={(e) => setDemoSupplierName(e.target.value)}
+                          placeholder="e.g. Apex Microelectronics India"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-1">
+                          The simulated supplier entity that will appear in your ranking comparison.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Audio Speaking Animation if speech synthesis is running */}
+                    {isSpeakingAudio && (
+                      <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-3 flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Volume2 className="h-4 w-4 text-indigo-600 animate-bounce" />
+                          <span className="text-xs font-bold text-indigo-900">
+                            AI Voice Dialogue Speaking Aloud in Browser...
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSpeakingAudio(false);
+                            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                              window.speechSynthesis.cancel();
+                            }
+                          }}
+                          className="text-[11px] font-bold text-red-600 hover:text-red-700 px-2 py-0.5 rounded bg-white border border-red-200 cursor-pointer"
+                        >
+                          Stop Audio
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Demo Action Buttons */}
+                    <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100 flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={handlePlayAudioSimulation}
+                        disabled={isSpeakingAudio}
+                        className="flex items-center space-x-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-3.5 py-2 text-xs transition cursor-pointer"
+                      >
+                        <Play className="h-3.5 w-3.5 fill-indigo-600 text-indigo-600" />
+                        <span>In-Browser Voice Simulation (Aloud)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleTriggerDemoCall}
+                        disabled={isCallingDemo || isPollingComparison}
+                        className="flex items-center space-x-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold px-4 py-2 text-xs shadow-sm transition cursor-pointer"
+                      >
+                        {isCallingDemo ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Dialing Phone via Vapi...</span>
+                          </>
+                        ) : (
+                          <>
+                            <PhoneCall className="h-4 w-4" />
+                            <span>Dial My Phone ({demoPhoneNumber})</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* In-Flight Calls Status Banner */}
+              {(isPollingComparison || initiatedCalls.length > 0) && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
+                      </span>
+                      <h4 className="text-xs font-bold text-blue-950">
+                        {isPollingComparison ? 'Autonomous AI Voice Dispatch In Progress...' : 'Outbound Calls Dispatched'}
+                      </h4>
+                      {isPollingComparison && (
+                        <span className="text-[10px] text-blue-600 font-mono flex items-center space-x-1">
+                          <RefreshCw className="h-2.5 w-2.5 animate-spin" />
+                          <span>Polling comparison radar every 3.5s</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => fetchComparison(voiceModalProduct.id)}
+                        className="p-1 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 text-[11px] font-bold px-2 py-0.5 flex items-center space-x-1"
+                        title="Manual Refresh"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        <span>Refresh</span>
+                      </button>
+
+                      {/* Simulation helper button for testing/demos */}
+                      <button
+                        onClick={() => handleSimulateWebhook()}
+                        disabled={isSimulatingWebhook}
+                        className="rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1 flex items-center space-x-1 transition shadow-sm"
+                        title="Inject mock Vapi end-of-call report for instant evaluation"
+                      >
+                        {isSimulatingWebhook ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3 w-3 text-amber-300" />
+                        )}
+                        <span>Simulate Call Response (Demo)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Initiated Calls Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    {initiatedCalls.map((c, i) => (
+                      <div
+                        key={c.callId || i}
+                        className="bg-white rounded-xl p-3 border border-blue-100 flex items-center justify-between text-xs shadow-xs"
+                      >
+                        <div>
+                          <div className="font-bold text-slate-800">{c.supplierName}</div>
+                          <div className="text-[11px] font-mono text-slate-500">{c.phoneNumber || 'Vapi Outbound'}</div>
+                        </div>
+                        <div className="text-right">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                            {c.status || 'CALLING'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Reasoning Spotlight Card */}
+              {comparisonData && comparisonData.aiReasoning && (
+                <div className="rounded-2xl border border-red-200/80 bg-gradient-to-br from-slate-900 via-slate-900 to-red-950 text-white p-5 shadow-lg relative overflow-hidden">
+                  <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-red-600/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="flex items-start space-x-3 relative z-10">
+                    <div className="h-9 w-9 rounded-xl bg-red-600/30 border border-red-500/40 flex items-center justify-center shrink-0 text-red-300">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-red-400">
+                          AI Autonomous Sourcing Intelligence
+                        </h4>
+                        <span className="text-[10px] font-mono bg-white/10 px-2 py-0.5 rounded text-slate-300">
+                          Multi-Factor Ranking + Ollama RAG
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        {comparisonData.aiReasoning || comparisonData.aiRecommendation}
+                      </p>
+                      {comparisonData.rankedSuppliers && comparisonData.rankedSuppliers.length > 0 && (
+                        <div className="pt-2 flex items-center space-x-2 text-xs text-red-200">
+                          <span className="font-bold">Top Choice:</span>
+                          <span className="bg-red-500/30 px-2 py-0.5 rounded font-mono font-semibold text-white">
+                            {comparisonData.rankedSuppliers[0].supplierName}
+                          </span>
+                          <span>• Lead Time: {comparisonData.rankedSuppliers[0].deliveryDays}d</span>
+                          <span>• Cost: ${comparisonData.rankedSuppliers[0].pricePerUnit?.toFixed(2)}/unit</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Supplier Comparison Table */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Step 2: AI Voice Comparison & Procurement Review
+                    </h4>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Structured findings parsed from Vapi call transcripts. Suppliers ranked by availability, lead time, and pricing.
+                    </p>
+                  </div>
+                  {comparisonData && (
+                    <span className="text-xs font-mono font-bold text-slate-500">
+                      {comparisonData.responsesReceived || 0} of {comparisonData.totalSuppliersContacted || initiatedCalls.length || 0} reported
+                    </span>
+                  )}
+                </div>
+
+                {comparisonData && comparisonData.rankedSuppliers && comparisonData.rankedSuppliers.length > 0 ? (
+                  <div className="overflow-x-auto rounded-xl border border-slate-200">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-100/75 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                          <th className="py-2.5 px-3">Rank & Supplier</th>
+                          <th className="py-2.5 px-3">Availability</th>
+                          <th className="py-2.5 px-3">Stock Offered</th>
+                          <th className="py-2.5 px-3">Lead Time</th>
+                          <th className="py-2.5 px-3">Price / Unit</th>
+                          <th className="py-2.5 px-3">Total Cost</th>
+                          <th className="py-2.5 px-3">Transcript</th>
+                          <th className="py-2.5 px-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {comparisonData.rankedSuppliers.map((s, idx) => {
+                          const isTopRank = s.rank === 1;
+                          const hasSufficientStock = s.stockQuantity >= (comparisonData.requiredQuantity || requiredQuantity);
+
+                          return (
+                            <tr
+                              key={s.supplierId || idx}
+                              className={`hover:bg-slate-50/80 transition ${
+                                isTopRank ? 'bg-red-50/30' : ''
+                              }`}
+                            >
+                              {/* Supplier & Rank */}
+                              <td className="py-3 px-3">
+                                <div className="flex items-center space-x-2">
+                                  <span
+                                    className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                                      isTopRank
+                                        ? 'bg-[#E51A24] text-white'
+                                        : 'bg-slate-200 text-slate-700'
+                                    }`}
+                                  >
+                                    {s.rank}
+                                  </span>
+                                  <div>
+                                    <div className="font-bold text-slate-900 flex items-center space-x-1">
+                                      <span>{s.supplierName}</span>
+                                      {isTopRank && (
+                                        <span className="px-1.5 py-0.5 rounded bg-red-100 text-[#E51A24] text-[9px] font-extrabold uppercase">
+                                          AI Choice
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-mono">{s.supplierPhone || s.phoneNumber || 'Outbound Direct'}</div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Availability */}
+                              <td className="py-3 px-3">
+                                {s.availability ? (
+                                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                    <span>Available</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
+                                    <XCircle className="h-3 w-3 text-rose-600" />
+                                    <span>Unavailable</span>
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Stock Offered */}
+                              <td className="py-3 px-3">
+                                <span
+                                  className={`font-mono font-bold ${
+                                    hasSufficientStock ? 'text-emerald-700' : 'text-amber-700'
+                                  }`}
+                                >
+                                  {s.stockQuantity} units
+                                </span>
+                                <div className="text-[10px] text-slate-400">
+                                  req: {comparisonData.requiredQuantity || requiredQuantity}
+                                </div>
+                              </td>
+
+                              {/* Delivery Lead Time */}
+                              <td className="py-3 px-3">
+                                <span className="font-mono font-bold text-slate-800">
+                                  {s.deliveryDays} days
+                                </span>
+                                {voiceModalProduct.primarySupplierLeadTime && (
+                                  <div className="text-[10px] text-slate-400">
+                                    vs primary: {voiceModalProduct.primarySupplierLeadTime}d
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Price per unit */}
+                              <td className="py-3 px-3 font-mono font-semibold text-slate-800">
+                                ${s.pricePerUnit ? s.pricePerUnit.toFixed(2) : '0.00'}
+                              </td>
+
+                              {/* Total Cost */}
+                              <td className="py-3 px-3 font-mono font-bold text-slate-900">
+                                ${s.totalCost ? s.totalCost.toFixed(2) : (s.pricePerUnit ? (s.pricePerUnit * (comparisonData.requiredQuantity || s.stockQuantity || 1)).toFixed(2) : '0.00')}
+                              </td>
+
+                              {/* Transcript button */}
+                              <td className="py-3 px-3">
+                                <button
+                                  onClick={() =>
+                                    setActiveTranscriptModal({
+                                      supplierName: s.supplierName,
+                                      transcript: s.transcript,
+                                      notes: s.notes
+                                    })
+                                  }
+                                  className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium flex items-center space-x-1 transition"
+                                  title="View Call Transcript"
+                                >
+                                  <FileText className="h-3.5 w-3.5 text-slate-500" />
+                                  <span>Transcript</span>
+                                </button>
+                              </td>
+
+                              {/* Action: Approve */}
+                              <td className="py-3 px-3 text-right">
+                                <button
+                                  onClick={() => handleApproveSupplier(s)}
+                                  disabled={approvingSupplierId === s.supplierId}
+                                  className={`px-3 py-1.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center space-x-1 ml-auto ${
+                                    isTopRank
+                                      ? 'bg-[#E51A24] hover:bg-[#C91822] text-white'
+                                      : 'bg-slate-900 hover:bg-slate-800 text-white'
+                                  }`}
+                                >
+                                  {approvingSupplierId === s.supplierId ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Check className="h-3.5 w-3.5" />
+                                  )}
+                                  <span>Approve Primary</span>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="py-10 text-center rounded-xl border border-dashed border-slate-200 text-slate-400 space-y-2">
+                    <PhoneCall className="h-8 w-8 mx-auto text-slate-300" />
+                    <p className="text-xs font-medium">
+                      {isPollingComparison
+                        ? 'Autonomous calls are active. Awaiting structured reports from Vapi telephony...'
+                        : 'No active voice comparison results yet. Click "Initiate AI Voice Calls" above to dial alternate suppliers.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-white">
+              <div className="text-[11px] text-slate-400 flex items-center space-x-1">
+                <ShieldAlert className="h-3.5 w-3.5 text-slate-400" />
+                <span>Approving a supplier writes an immutable audit record and updates inventory lead time models.</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleCloseVoiceModal}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transcript Drawer Modal */}
+      {activeTranscriptModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-900 text-white">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-4 w-4 text-red-400" />
+                <h4 className="text-sm font-bold text-white">
+                  Call Transcript: {activeTranscriptModal.supplierName}
+                </h4>
+              </div>
+              <button
+                onClick={() => setActiveTranscriptModal(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50">
+              {activeTranscriptModal.notes && (
+                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs">
+                  <strong>Extracted Notes:</strong> {activeTranscriptModal.notes}
+                </div>
+              )}
+
+              <div className="rounded-xl border border-slate-200 bg-white p-4 font-mono text-xs text-slate-800 whitespace-pre-wrap leading-relaxed space-y-2">
+                {activeTranscriptModal.transcript || 'No transcript text was recorded for this call.'}
+              </div>
+            </div>
+
+            <div className="px-5 py-3 border-t border-slate-100 bg-white text-right">
+              <button
+                onClick={() => setActiveTranscriptModal(null)}
+                className="px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition"
+              >
+                Close Transcript
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

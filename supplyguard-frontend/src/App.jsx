@@ -16,7 +16,7 @@ import SupplierModal from './components/SupplierModal';
 import BentoHomeDashboard from './components/BentoHomeDashboard';
 import OnboardingFlow from './components/OnboardingFlow';
 import SettingsProfile from './components/SettingsProfile';
-import LoginPage from '../components/LoginPage';
+import LoginPage from './components/LoginPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import apiClient from './api/apiClient';
 import { createWebSocketClient } from './api/websocket';

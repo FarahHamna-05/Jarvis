@@ -45,6 +45,28 @@ public class ProductSupplierCallController {
     }
 
     /**
+     * Triggers a live demo call to any custom phone number (e.g. user's own Indian mobile).
+     */
+    @PostMapping("/{id}/demo-call")
+    public ResponseEntity<PendingCall> triggerDemoCall(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> payload) {
+
+        String phoneNumber = (String) payload.get("phoneNumber");
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String supplierName = (String) payload.getOrDefault("supplierName", "Demo Indian Supplier");
+        Integer quantity = payload.get("requiredQuantity") != null
+                ? ((Number) payload.get("requiredQuantity")).intValue()
+                : 100;
+
+        PendingCall call = supplierComparisonService.dispatchCustomDemoCall(id, phoneNumber, supplierName, quantity);
+        return ResponseEntity.ok(call);
+    }
+
+    /**
      * Confirms the merchant's choice of supplier and records the approval to the audit log.
      */
     @PostMapping("/{id}/approve-supplier")
