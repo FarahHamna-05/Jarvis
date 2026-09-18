@@ -1,0 +1,100 @@
+/* SwipeToast Fallback & Enhancement Styles */
+
+.swipe-toast-root {
+  display: grid;
+  width: min(var(--st-w, 356px), 100%);
+  font-size: 13px;
+  line-height: 1.4;
+  grid-template-rows: 1fr;
+  color: var(--st-ink, #f5f5f5);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+.swipe-toast-root[data-inline="false"],
+.swipe-toast-root[data-inline="false"][data-position="top-right"] {
+  position: fixed !important;
+  right: 24px !important;
+  top: 24px !important;
+  bottom: auto !important;
+  z-index: 999999999 !important;
+  width: min(var(--st-w, 356px), calc(100vw - 48px)) !important;
+}
+
+@media (max-width: 600px) {
+  .swipe-toast-root[data-inline="false"],
+  .swipe-toast-root[data-inline="false"][data-position="top-right"] {
+    right: 16px !important;
+    top: 16px !important;
+    bottom: auto !important;
+    width: min(var(--st-w, 356px), calc(100vw - 32px)) !important;
+  }
+}
+
+.swipe-toast-root[data-inline="true"] {
+  transition: grid-template-rows var(--st-slide, 400ms) cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.swipe-toast-root[data-inline="true"][data-phase="closing"],
+.swipe-toast-root[data-inline="true"][data-phase="gone"] {
+  grid-template-rows: 0fr;
+}
+
+.swipe-toast-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.swipe-toast-card {
+  position: relative;
+  display: flex;
+  cursor: grab;
+  touch-action: none;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 14px 16px;
+  outline: none;
+  user-select: none;
+  background: var(--st-bg, #27272a);
+  border-radius: var(--st-radius, 12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.swipe-toast-card[data-swiping] {
+  cursor: grabbing;
+}
+
+.swipe-toast-content {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.swipe-toast-title {
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--st-ink, #ffffff);
+  font-size: 13.5px;
+}
+
+.swipe-toast-desc {
+  line-height: 1.35;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}
+
+.swipe-toast-fuse {
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  transform-origin: left;
+  background: linear-gradient(90deg, transparent 0%, var(--st-fuse, #ff6200) 25%, var(--st-fuse, #ff6200) 75%, transparent 100%);
+}
