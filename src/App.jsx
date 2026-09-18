@@ -18,7 +18,7 @@ export default function App() {
       const p = new URLSearchParams(window.location.search).get('page');
       if (p === 'login' || p === 'signup') return 'login';
       if (p === 'pricing') return 'pricing';
-      if (p === 'home') return 'home';
+      if (p === 'home' || p === 'team' || p === 'faq') return 'home';
       if (p === 'dashboard' || p === 'category' || p === 'categories' || p === 'interests') return 'dashboard';
     } catch {}
     return 'dashboard';
