@@ -48,17 +48,24 @@ public class SupplierCallService {
         this.objectMapper = new ObjectMapper();
     }
 
+    public PendingCall initiateCall(String supplierPhoneNumber, String merchantName,
+                                   String productName, int requiredQuantity,
+                                   String supplierId, String productId) {
+        return initiateCall(supplierPhoneNumber, merchantName, productName, requiredQuantity, supplierId, "Supplier", productId);
+    }
+
     /**
      * Initiates an outbound voice call to a supplier using Vapi's API.
      * Stores the call record in MongoDB PendingCall collection.
      */
     public PendingCall initiateCall(String supplierPhoneNumber, String merchantName,
                                    String productName, int requiredQuantity,
-                                   String supplierId, String productId) {
+                                   String supplierId, String supplierName, String productId) {
         LocalDateTime now = LocalDateTime.now();
         String cleanPhone = normalizePhoneNumber(supplierPhoneNumber);
         String safeMerchant = (merchantName != null && !merchantName.trim().isEmpty()) ? merchantName : "SupplyGuard Merchant";
         String safeProduct = (productName != null && !productName.trim().isEmpty()) ? productName : "Critical Component";
+        String safeSupplier = (supplierName != null && !supplierName.trim().isEmpty()) ? supplierName : "Supplier";
 
         // Validate basic inputs
         if (cleanPhone.isEmpty()) {
@@ -66,6 +73,7 @@ public class SupplierCallService {
             PendingCall failedCall = PendingCall.builder()
                     .vapiCallId("uncalled-" + UUID.randomUUID())
                     .supplierId(supplierId)
+                    .supplierName(safeSupplier)
                     .productId(productId)
                     .productName(safeProduct)
                     .requiredQuantity(requiredQuantity)
@@ -89,6 +97,7 @@ public class SupplierCallService {
             PendingCall simulatedCall = PendingCall.builder()
                     .vapiCallId(mockCallId)
                     .supplierId(supplierId)
+                    .supplierName(safeSupplier)
                     .supplierPhone(cleanPhone)
                     .productId(productId)
                     .productName(safeProduct)
@@ -114,6 +123,7 @@ public class SupplierCallService {
 
             Map<String, Object> variableValues = new HashMap<>();
             variableValues.put("merchantName", safeMerchant);
+            variableValues.put("supplierName", safeSupplier);
             variableValues.put("productName", safeProduct);
             variableValues.put("requiredQuantity", requiredQuantity);
 
@@ -128,7 +138,7 @@ public class SupplierCallService {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
             logger.info("Dispatching Vapi outbound call to phone: {} (Supplier: {}, Product: {}, Quantity: {})",
-                    cleanPhone, supplierId, safeProduct, requiredQuantity);
+                    cleanPhone, safeSupplier, safeProduct, requiredQuantity);
 
             ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, entity, String.class);
 
@@ -146,11 +156,12 @@ public class SupplierCallService {
                 vapiCallId = "vapi-call-" + UUID.randomUUID().toString().substring(0, 8);
             }
 
-            logger.info("Vapi call successfully initiated with ID: {} for supplier {}", vapiCallId, supplierId);
+            logger.info("Vapi call successfully initiated with ID: {} for supplier {}", vapiCallId, safeSupplier);
 
             PendingCall pendingCall = PendingCall.builder()
                     .vapiCallId(vapiCallId)
                     .supplierId(supplierId)
+                    .supplierName(safeSupplier)
                     .supplierPhone(cleanPhone)
                     .productId(productId)
                     .productName(safeProduct)
@@ -168,6 +179,7 @@ public class SupplierCallService {
             PendingCall failedCall = PendingCall.builder()
                     .vapiCallId("failed-" + UUID.randomUUID().toString().substring(0, 8))
                     .supplierId(supplierId)
+                    .supplierName(safeSupplier)
                     .supplierPhone(cleanPhone)
                     .productId(productId)
                     .productName(safeProduct)

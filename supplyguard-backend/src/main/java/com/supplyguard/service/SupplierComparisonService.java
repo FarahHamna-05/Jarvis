@@ -87,6 +87,7 @@ public class SupplierComparisonService {
                         product.getName(),
                         demandQty,
                         String.valueOf(supplier.getId()),
+                        supplier.getName(),
                         productId
                 );
                 initiatedCalls.add(call);
@@ -312,6 +313,7 @@ public class SupplierComparisonService {
                 product.getName(),
                 demand,
                 "demo-" + UUID.randomUUID().toString().substring(0, 6),
+                name,
                 product.getId()
         );
     }
