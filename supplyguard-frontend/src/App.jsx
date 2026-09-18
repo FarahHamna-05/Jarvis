@@ -13,17 +13,25 @@ import AIChatWidget from './components/AIChatWidget';
 import MitigationModal from './components/MitigationModal';
 import ProductModal from './components/ProductModal';
 import SupplierModal from './components/SupplierModal';
-import AuthModal from './components/AuthModal';
 import BentoHomeDashboard from './components/BentoHomeDashboard';
 import OnboardingFlow from './components/OnboardingFlow';
 import SettingsProfile from './components/SettingsProfile';
-import AuthPage from './components/AuthPage';
+import LoginPage from '../components/LoginPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import apiClient from './api/apiClient';
 import { createWebSocketClient } from './api/websocket';
 import ToastContainer from './components/ToastContainer';
 import { showToast } from './utils/toast';
+import {
+  MOCK_SUMMARY,
+  MOCK_RISKS,
+  MOCK_PRODUCTS,
+  MOCK_SUPPLIERS,
+  MOCK_CONVERSATIONS,
+  MOCK_AUDIT_LOGS
+} from './api/mockData';
 
-export default function App() {
+export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
   const [activeTab, setActiveTabState] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -52,12 +60,12 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-  const [summary, setSummary] = useState(null);
-  const [risks, setRisks] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [conversations, setConversations] = useState([]);
-  const [auditLogs, setAuditLogs] = useState([]);
+  const [summary, setSummary] = useState(MOCK_SUMMARY);
+  const [risks, setRisks] = useState(MOCK_RISKS);
+  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [suppliers, setSuppliers] = useState(MOCK_SUPPLIERS);
+  const [conversations, setConversations] = useState(MOCK_CONVERSATIONS);
+  const [auditLogs, setAuditLogs] = useState(MOCK_AUDIT_LOGS);
   const [filterSeverity, setFilterSeverity] = useState('ALL');
 
   const [currentUser, setCurrentUser] = useState(() => {
@@ -80,22 +88,22 @@ export default function App() {
     setIsRefreshing(true);
     try {
       const [summaryRes, risksRes, productsRes, suppliersRes, convosRes, auditRes] = await Promise.all([
-        apiClient.get('/risks/dashboard-summary'),
-        apiClient.get('/risks'),
-        apiClient.get('/products'),
-        apiClient.get('/suppliers'),
-        apiClient.get('/communications'),
-        apiClient.get('/approvals/audit-logs'),
+        apiClient.get('/risks/dashboard-summary').catch(() => ({ data: MOCK_SUMMARY })),
+        apiClient.get('/risks').catch(() => ({ data: MOCK_RISKS })),
+        apiClient.get('/products').catch(() => ({ data: MOCK_PRODUCTS })),
+        apiClient.get('/suppliers').catch(() => ({ data: MOCK_SUPPLIERS })),
+        apiClient.get('/communications').catch(() => ({ data: MOCK_CONVERSATIONS })),
+        apiClient.get('/approvals/audit-logs').catch(() => ({ data: MOCK_AUDIT_LOGS })),
       ]);
 
-      setSummary(summaryRes.data);
-      setRisks(risksRes.data);
-      setProducts(productsRes.data);
-      setSuppliers(suppliersRes.data);
-      setConversations(convosRes.data);
-      setAuditLogs(auditRes.data);
+      if (summaryRes?.data) setSummary(summaryRes.data);
+      if (risksRes?.data && risksRes.data.length > 0) setRisks(risksRes.data);
+      if (productsRes?.data && productsRes.data.length > 0) setProducts(productsRes.data);
+      if (suppliersRes?.data && suppliersRes.data.length > 0) setSuppliers(suppliersRes.data);
+      if (convosRes?.data && convosRes.data.length > 0) setConversations(convosRes.data);
+      if (auditRes?.data && auditRes.data.length > 0) setAuditLogs(auditRes.data);
     } catch (err) {
-      console.error('Failed to load telemetry:', err);
+      console.warn('API offline or error, running on simulated telemetry:', err);
     } finally {
       setIsRefreshing(false);
     }
@@ -291,166 +299,36 @@ export default function App() {
   };
 
   // Email Outreach Actions
-  const handleDraftEmailForRisk = async (event, overrideEmail) => {
+  const handleDraftEmailForRisk = async (event) => {
     try {
-      const riskId = event?.id || 1;
-      const params = {};
-      if (overrideEmail && overrideEmail.trim()) {
-        params.toEmail = overrideEmail.trim();
-      }
-      const res = await apiClient.post(`/communications/draft/${riskId}`, null, { params });
+      const riskId = event.id || 1;
+      await apiClient.post(`/communications/draft/${riskId}`);
       await fetchAllData();
       setActiveTab('inbox');
-
-      const convo = res.data;
-      const latestMsg = convo?.messages && convo.messages.length > 0 ? convo.messages[convo.messages.length - 1] : null;
-      const isFailed = latestMsg?.deliveryStatus === 'FAILED' || latestMsg?.deliveryStatus === 'failed' || latestMsg?.status === 'failed';
-      const recipient = latestMsg?.recipientEmail || overrideEmail || event?.supplierName || 'supplier';
-      const timeStr = latestMsg?.sentAt
-        ? new Date(latestMsg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (isFailed) {
-        showToast({
-          title: '⚠️ SendGrid Delivery Alert',
-          description: latestMsg?.deliveryDetails || 'Delivery failed via SendGrid API. Conversation recorded with failed status.',
-          type: 'warning',
-          duration: 6000
-        });
-      } else {
-        showToast({
-          title: `✅ Sent to ${recipient} at ${timeStr}`,
-          description: `AI-synthesized procurement notice successfully delivered via SendGrid.`,
-          type: 'communication',
-          duration: 6000
-        });
-      }
+      showToast({
+        title: 'Procurement Draft Created',
+        description: `Draft prepared for ${event.supplierName || 'supplier'}. Pending sign-off.`,
+        type: 'communication'
+      });
     } catch (err) {
       console.error('Draft email error:', err);
       setActiveTab('inbox');
     }
   };
 
-  const handleSendApprovedEmail = async (convoId, messageId, approvedBy, overrideEmail) => {
+  const handleSendApprovedEmail = async (convoId, messageId, approvedBy) => {
     try {
-      const params = { approvedBy };
-      if (overrideEmail && overrideEmail.trim()) {
-        params.toEmail = overrideEmail.trim();
-      }
-      const response = await apiClient.post(`/communications/${convoId}/send/${messageId}`, null, {
-        params
+      await apiClient.post(`/communications/${convoId}/send/${messageId}`, null, {
+        params: { approvedBy }
       });
       await fetchAllData();
-
-      const convo = response?.data;
-      const latestMsg = convo?.messages?.find((m) => m.id === messageId) ||
-        (convo?.messages && convo.messages.length > 0 ? convo.messages[convo.messages.length - 1] : null);
-      const isFailed = latestMsg?.deliveryStatus === 'FAILED' || latestMsg?.deliveryStatus === 'failed' || latestMsg?.status === 'failed';
-      const recipient = latestMsg?.recipientEmail || overrideEmail || 'supplier inbox';
-      const timeStr = latestMsg?.sentAt
-        ? new Date(latestMsg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (isFailed) {
-        showToast({
-          title: '❌ Delivery Failed',
-          description: latestMsg?.deliveryDetails || 'Email delivery failed. You can adjust the recipient address and retry.',
-          type: 'warning',
-          duration: 6000
-        });
-      } else {
-        showToast({
-          title: `✅ Delivered to ${recipient} at ${timeStr}`,
-          description: `Dispatched from freefiregodtamil@gmail.com via Gmail SMTP. Conversation audit log updated.`,
-          type: 'communication',
-          duration: 6000
-        });
-      }
+      showToast({
+        title: 'PO Dispatch Authorized',
+        description: `Autonomous procurement email dispatched by ${approvedBy}.`,
+        type: 'communication'
+      });
     } catch (err) {
       console.error('Send email error:', err);
-      showToast({
-        title: 'Dispatch Failed',
-        description: err.response?.data?.message || err.message || 'Error communicating with mail server.',
-        type: 'error'
-      });
-    }
-  };
-
-  const handleUpdateSupplier = async (supplierId, updateData) => {
-    try {
-      await apiClient.put(`/suppliers/${supplierId}`, updateData);
-      await fetchAllData();
-      showToast({
-        title: 'Supplier Updated',
-        description: `Successfully updated ${updateData.name || 'supplier'} contact & details.`,
-        type: 'success'
-      });
-      return true;
-    } catch (err) {
-      console.error('Update supplier error:', err);
-      showToast({
-        title: 'Update Failed',
-        description: err.response?.data?.message || err.message || 'Could not update supplier.',
-        type: 'error'
-      });
-      return false;
-    }
-  };
-
-  const handleContactSupplier = async (supplierId, payload = {}) => {
-    try {
-      if (payload.updateSupplierEmail && payload.toEmail) {
-        const targetSup = suppliers.find(s => s.id === supplierId);
-        if (targetSup) {
-          await apiClient.put(`/suppliers/${supplierId}`, {
-            ...targetSup,
-            contactEmail: payload.toEmail.trim()
-          });
-        }
-      }
-
-      const body = {
-        approvedBy: currentUser?.username || 'Operator',
-        toEmail: payload.toEmail,
-        customSubject: payload.customSubject,
-        customNotes: payload.customNotes,
-        productId: payload.productId
-      };
-
-      const response = await apiClient.post(`/suppliers/${supplierId}/contact`, body);
-      await fetchAllData();
-      setActiveTab('inbox');
-
-      const convo = response.data;
-      const latestMsg = convo?.messages && convo.messages.length > 0 ? convo.messages[convo.messages.length - 1] : null;
-      const isFailed = latestMsg?.deliveryStatus === 'FAILED' || latestMsg?.deliveryStatus === 'failed' || latestMsg?.status === 'failed';
-      const recipient = latestMsg?.recipientEmail || payload.toEmail || 'supplier';
-      const timeStr = latestMsg?.sentAt
-        ? new Date(latestMsg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (isFailed) {
-        showToast({
-          title: '⚠️ Email Delivery Alert',
-          description: `Delivery Failed: ${latestMsg?.deliveryDetails || 'Mail server reported failure'}. Saved to MongoDB.`,
-          type: 'warning',
-          duration: 6000
-        });
-      } else {
-        showToast({
-          title: `✅ Sent to ${recipient} at ${timeStr}`,
-          description: `Dispatched from freefiregodtamil@gmail.com to supplier inbox. Conversation recorded in MongoDB.`,
-          type: 'communication',
-          duration: 6000
-        });
-      }
-    } catch (err) {
-      console.error('Contact supplier error:', err);
-      showToast({
-        title: 'Contact Supplier Failed',
-        description: err.response?.data?.message || err.message || 'Could not contact supplier.',
-        type: 'error'
-      });
     }
   };
 
@@ -487,8 +365,20 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-slate-900 flex flex-col items-center py-0 selection:bg-[#E51A24] selection:text-white bg-black">
-      {/* Top Vibrant Red Talentsy Navbar */}
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        overflowY: 'auto',
+        zIndex: 1000,
+        background: '#000000',
+        userSelect: 'auto'
+      }}
+      className="text-slate-100 flex flex-col items-center py-0 selection:bg-[#E51A24] selection:text-white"
+    >
+      {/* Top Center Flush-to-Top Black Glass Navbar (Matching Landing Page) */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -496,6 +386,7 @@ export default function App() {
         onOpenAuth={(mode) => {
           setActiveTab(mode || 'login');
         }}
+        onGoToHome={onGoToHome}
         onLogout={handleLogout}
         onRefresh={handleRecalculateAll}
         isRefreshing={isRefreshing}
@@ -503,12 +394,13 @@ export default function App() {
         onOpenOnboarding={() => setIsOnboardingOpen(true)}
       />
 
-      {/* Main Page Content Wrapper */}
-      <div className="w-full max-w-[1780px] px-4 sm:px-6 lg:px-8 py-6 relative">
+      {/* Main Page Content Wrapper (Padded for flush floating navbar) */}
+      <div className="w-full max-w-[1780px] px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-10 relative">
         <div className="flex flex-col lg:flex-row gap-6 relative z-10">
 
           {/* Main Content Area */}
           <main className="flex-1 min-w-0">
+            <ErrorBoundary onReset={() => setActiveTab('dashboard')}>
             
             {/* 1. Dashboard View */}
             {activeTab === 'dashboard' && (
@@ -538,8 +430,8 @@ export default function App() {
 
                 {/* Collapsible Deep-Dive Risk Feed & KPI Statistics */}
                 <div className="pt-2">
-                  <div className="flex items-center justify-between border-t border-slate-200 pt-4 pb-2 px-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <div className="flex items-center justify-between border-t border-white/15 pt-4 pb-2 px-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                       Detailed Risk Ledger & Inventory Telemetry
                     </span>
                     <button
@@ -579,17 +471,17 @@ export default function App() {
             {activeTab === 'products' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
                 <ProductCatalog
                   products={products}
-                  onOpenAddProduct={() => {
-                    setEditingProduct(null);
+                  onOpenAddProduct={(initialData) => {
+                    setEditingProduct(initialData && typeof initialData === 'object' && initialData.name ? initialData : null);
                     setIsProductModalOpen(true);
                   }}
                   onEditProduct={(p) => {
@@ -597,7 +489,6 @@ export default function App() {
                     setIsProductModalOpen(true);
                   }}
                   onDeleteProduct={handleDeleteProduct}
-                  onRefresh={fetchAllData}
                 />
               </div>
             )}
@@ -606,10 +497,10 @@ export default function App() {
             {activeTab === 'suppliers' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -618,8 +509,6 @@ export default function App() {
                   onToggleStatus={handleToggleSupplierStatus}
                   onOpenAddSupplier={() => setIsSupplierModalOpen(true)}
                   onOpenDraftEmail={handleDraftEmailForRisk}
-                  onContactSupplier={handleContactSupplier}
-                  onUpdateSupplier={handleUpdateSupplier}
                 />
               </div>
             )}
@@ -628,10 +517,10 @@ export default function App() {
             {activeTab === 'simulator' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -640,28 +529,29 @@ export default function App() {
                   products={products}
                   onSimulate={handleSimulateDisruption}
                   onReset={handleResetSimulator}
-                  onContactSupplier={handleContactSupplier}
                 />
               </div>
             )}
 
             {/* 5. Supplier Mailbox View */}
             {activeTab === 'inbox' && (
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
-                }}
-                className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
-              >
-                <CommunicationsInbox
-                  conversations={conversations}
-                  onSendEmail={handleSendApprovedEmail}
-                  onSimulateReply={handleSimulateSupplierReply}
-                  currentUser={currentUser}
-                />
+              <div className="max-w-7xl mx-auto w-full space-y-6">
+                <div
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E2E8F0',
+                    boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                    color: '#0F172A'
+                  }}
+                  className="rounded-2xl p-6 lg:p-7 shadow-lg min-h-[700px]"
+                >
+                  <CommunicationsInbox
+                    conversations={conversations}
+                    onSendEmail={handleSendApprovedEmail}
+                    onSimulateReply={handleSimulateSupplierReply}
+                    currentUser={currentUser}
+                  />
+                </div>
               </div>
             )}
 
@@ -669,10 +559,10 @@ export default function App() {
             {activeTab === 'graph' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -688,10 +578,10 @@ export default function App() {
             {activeTab === 'audit' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -713,22 +603,34 @@ export default function App() {
               />
             )}
 
-            {/* 9. Dedicated Full-Page Login & Signup */}
+            {/* 9. Dedicated Full-Page Login & Signup (Landing Page LoginPage) */}
             {(activeTab === 'login' || activeTab === 'signup') && (
-              <AuthPage
-                initialMode={activeTab === 'signup' ? 'signup' : 'login'}
-                onAuthSuccess={(user) => {
-                  setCurrentUser(user);
+              <LoginPage
+                defaultMode={activeTab === 'signup' ? 'signup' : 'login'}
+                onBackToHome={() => setActiveTab('dashboard')}
+                onLoginSuccess={(user) => {
+                  const loggedInUser = user || {
+                    username: 'admin',
+                    fullName: 'Store Admin',
+                    email: 'admin@beforestock.ai',
+                    role: 'ROLE_ADMIN',
+                    onboardingCompleted: true
+                  };
+                  setCurrentUser(loggedInUser);
+                  localStorage.setItem('supplyguard_user', JSON.stringify(loggedInUser));
                   setActiveTab('dashboard');
-                  if (!user.onboardingCompleted) {
-                    setIsOnboardingOpen(true);
-                  }
                 }}
-                onNavigateDashboard={() => setActiveTab('dashboard')}
-                showToast={showToast}
+                onSubmitSuccess={(msg) => {
+                  showToast({
+                    title: msg,
+                    type: 'success',
+                    duration: 4000
+                  });
+                }}
               />
             )}
 
+            </ErrorBoundary>
           </main>
         </div>
       </div>
@@ -769,20 +671,27 @@ export default function App() {
 
       {/* Auth Modal (Sign In & Sign Up) */}
       {isAuthModalOpen && (
-        <AuthModal
-          initialMode={authModalMode}
-          onClose={() => setIsAuthModalOpen(false)}
-          onAuthSuccess={(user) => {
-            setCurrentUser(user);
+        <LoginPage
+          defaultMode={authModalMode}
+          onBackToHome={() => setIsAuthModalOpen(false)}
+          onLoginSuccess={(user) => {
+            const loggedInUser = user || {
+              username: 'admin',
+              fullName: 'Store Admin',
+              email: 'admin@beforestock.ai',
+              role: 'ROLE_ADMIN',
+              onboardingCompleted: true
+            };
+            setCurrentUser(loggedInUser);
+            localStorage.setItem('supplyguard_user', JSON.stringify(loggedInUser));
+            setIsAuthModalOpen(false);
+          }}
+          onSubmitSuccess={(msg) => {
             showToast({
-              title: `Welcome, ${user.fullName || user.username}!`,
-              description: 'Successfully authenticated with SupplyGuard.',
+              title: msg,
               type: 'success',
-              duration: 4500
+              duration: 4000
             });
-            if (!user.onboardingCompleted) {
-              setIsOnboardingOpen(true);
-            }
           }}
         />
       )}

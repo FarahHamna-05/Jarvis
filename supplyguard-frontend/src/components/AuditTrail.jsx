@@ -14,14 +14,14 @@ export default function AuditTrail({ auditLogs = [] }) {
   return (
     <div className="space-y-5 text-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2D5AC] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h2 className="text-xl font-extrabold text-[#1E223D] flex items-center space-x-2.5">
-            <span className="p-2 rounded-xl bg-red-50 text-[#E51A24] border border-red-200/60">
+          <h2 className="text-xl font-extrabold text-[#0F172A] flex items-center space-x-2.5">
+            <span className="p-2 rounded-xl bg-slate-50/90 text-[#E51A24] border border-slate-200">
               <History className="h-5 w-5" />
             </span>
             <span>Immutable Human-in-the-Loop Audit Trail</span>
-            <span className="text-xs font-bold text-[#E51A24] bg-red-50 px-2.5 py-0.5 rounded-full border border-red-200">
+            <span className="text-xs font-bold text-[#E51A24] bg-slate-50/90 px-2.5 py-0.5 rounded-full border border-slate-200">
               {auditLogs.length} entries
             </span>
           </h2>
@@ -38,13 +38,13 @@ export default function AuditTrail({ auditLogs = [] }) {
             placeholder="Search audit trail..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border border-[#E2D5AC] bg-white/95 pl-10 pr-4 py-2 text-xs font-semibold text-[#1E223D] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E51A24]/30 focus:border-[#E51A24] shadow-2xs transition"
+            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-xs font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E51A24]/30 focus:border-[#E51A24] shadow-sm transition"
           />
         </div>
       </div>
 
       {/* Audit Log Table */}
-      <div className="rounded-2xl border border-[#E2D5AC] bg-white/95 overflow-hidden shadow-2xs">
+      <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase font-bold text-slate-500 tracking-wider">

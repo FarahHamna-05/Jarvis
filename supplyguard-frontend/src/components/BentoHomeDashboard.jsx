@@ -198,7 +198,7 @@ export default function BentoHomeDashboard({
       reason: 'USAGE SURGE: Production ramp increased daily consumption by 35%.',
       aiRecommendation: 'Increase standing bi-weekly reorder quantity from 200 to 350 units.',
       actionRecommended: 'INCREASE_REORDER_QTY',
-      tabColor: 'bg-[#FFFDD0]'
+      tabColor: 'bg-white'
     }
   ];
 
@@ -269,13 +269,13 @@ export default function BentoHomeDashboard({
       {/* ============================================================ */}
       <div className="flex-1 flex flex-col gap-5 min-w-0">
         
-        {/* Top Large Canvas Screen - Cream #FFFDD0 Luxury Container */}
+        {/* Top Large Canvas Screen - Full White Luxury Container */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-            border: '1.5px solid #E2D5AC',
-            boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-            color: '#1E223D'
+            background: '#FFFFFF',
+            border: '1.5px solid #E2E8F0',
+            boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+            color: '#0F172A'
           }}
           className="relative rounded-2xl p-6 lg:p-7 flex flex-col justify-between min-h-[490px] overflow-hidden"
         >
@@ -284,27 +284,27 @@ export default function BentoHomeDashboard({
               <div className="flex items-center justify-between z-10 flex-wrap gap-2 pb-2">
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
-                    <span className="text-base font-bold tracking-tight text-[#1E223D]">SupplyGuard</span>
-                    <span className="rounded-full bg-[#1E223D] px-2.5 py-0.5 text-[10px] font-bold text-[#FFFDD0] shadow-xs">
+                    <span className="text-base font-bold tracking-tight text-[#0F172A]">SupplyGuard</span>
+                    <span className="rounded-full bg-[#0F172A] px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
                       AI 2.0
                     </span>
                   </div>
 
-                  <span className="hidden md:flex rounded-full bg-[#1E223D] px-3 py-1 text-xs font-semibold text-[#FFFDD0] items-center space-x-2 shadow-xs">
+                  <span className="hidden md:flex rounded-full bg-[#0F172A] px-3 py-1 text-xs font-semibold text-white items-center space-x-2 shadow-xs">
                     <span className="h-2 w-2 rounded-full bg-[#E51A24] animate-ping" />
                     <span>Live Threat Radar</span>
                   </span>
 
-                  <div className="flex bg-[#1E223D]/10 rounded-full p-1 text-xs font-semibold">
+                  <div className="flex bg-[#0F172A]/10 rounded-full p-1 text-xs font-semibold">
                     <button
                       onClick={() => setActiveCanvasView('FEATURED')}
-                      className={`px-3 py-0.5 rounded-full transition cursor-pointer ${activeCanvasView === 'FEATURED' ? 'bg-[#E51A24] text-white shadow-sm font-bold' : 'text-[#1E223D]/75 hover:text-[#1E223D]'}`}
+                      className={`px-3 py-0.5 rounded-full transition cursor-pointer ${activeCanvasView === 'FEATURED' ? 'bg-[#E51A24] text-white shadow-sm font-bold' : 'text-[#0F172A]/75 hover:text-[#0F172A]'}`}
                     >
                       Spotlight
                     </button>
                     <button
                       onClick={() => setActiveCanvasView('GRAPH')}
-                      className={`px-3 py-0.5 rounded-full transition cursor-pointer ${activeCanvasView === 'GRAPH' ? 'bg-[#E51A24] text-white shadow-sm font-bold' : 'text-[#1E223D]/75 hover:text-[#1E223D]'}`}
+                      className={`px-3 py-0.5 rounded-full transition cursor-pointer ${activeCanvasView === 'GRAPH' ? 'bg-[#E51A24] text-white shadow-sm font-bold' : 'text-[#0F172A]/75 hover:text-[#0F172A]'}`}
                     >
                       Topology
                     </button>
@@ -313,17 +313,17 @@ export default function BentoHomeDashboard({
 
                 <div
                   style={{
-                    background: '#1E223D',
-                    borderColor: '#1E223D',
-                    color: '#FFFDD0'
+                    background: '#0F172A',
+                    borderColor: '#0F172A',
+                    color: '#FFFFFF'
                   }}
                   className="flex items-center space-x-2 text-xs font-mono px-3.5 py-1 rounded-full border shadow-xs"
                 >
                   <span>Buffer: <strong className="text-white">1.20x</strong></span>
-                  <span className="text-[#FFFDD0]/30">|</span>
+                  <span className="text-white/30">|</span>
                   <span className="text-white font-bold">{currentUser?.username || 'admin'}</span>
                   {currentUser && (
-                    <button onClick={onLogout} title="Sign Out" className="text-[10px] text-[#FFFDD0]/70 hover:underline ml-1 cursor-pointer">
+                    <button onClick={onLogout} title="Sign Out" className="text-[10px] text-white/70 hover:underline ml-1 cursor-pointer">
                       (out)
                     </button>
                   )}
@@ -339,7 +339,7 @@ export default function BentoHomeDashboard({
                     {/* Left Column: Product Imagery + Runway Dial (5 cols) */}
                     <div className="lg:col-span-5 flex flex-col items-center sm:items-start space-y-3">
                       {/* Product Image Card with Severity Glow */}
-                      <div className="relative group w-full h-[180px] rounded-2xl overflow-hidden border border-[#E2D5AC] shadow-xs bg-black/10">
+                      <div className="relative group w-full h-[180px] rounded-2xl overflow-hidden border border-slate-200 shadow-2xs bg-black/10">
                         <img
                           src={matchedProduct?.imageBase64 || 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&auto=format&fit=crop&q=60'}
                           alt={currentRisk.productName}
@@ -348,15 +348,15 @@ export default function BentoHomeDashboard({
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                         
                         {/* Category Chip */}
-                        <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-bold text-[#FFFDD0] border border-white/20 uppercase tracking-wider">
+                        <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider border border-white/20">
                           {matchedProduct?.category || 'Semiconductors'}
                         </span>
 
-                        {/* Severity Badge */}
-                        <span className="absolute bottom-2.5 left-2.5 inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#E51A24] text-white text-[11px] font-extrabold shadow-md">
-                          <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
-                          <span>{currentRisk.severity} RISK</span>
-                        </span>
+                        {/* Critical Risk Floating Badge */}
+                        <div className="absolute bottom-2.5 left-2.5 flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#E51A24] text-white text-[11px] font-bold shadow-md animate-pulse">
+                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                          <span>CRITICAL RISK</span>
+                        </div>
 
                         {/* Runway Badge */}
                         <span className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-white text-[11px] font-mono font-bold border border-white/20">
@@ -365,12 +365,12 @@ export default function BentoHomeDashboard({
                       </div>
 
                       {/* Stock Level vs Threshold Gauge */}
-                      <div className="w-full bg-white/95 border border-[#E2D5AC] rounded-xl p-3 shadow-2xs space-y-1.5">
-                        <div className="flex justify-between text-[11px] font-bold text-[#1E223D]">
-                          <span>Current Stock: <strong className="font-mono text-[#1E223D]">{matchedProduct?.currentStock ?? 115} units</strong></span>
+                      <div className="w-full bg-slate-50/90 border border-slate-200/90 rounded-xl p-3 shadow-2xs space-y-1.5">
+                        <div className="flex justify-between text-[11px] font-bold text-[#0F172A]">
+                          <span>Current Stock: <strong className="font-mono text-[#0F172A]">{matchedProduct?.currentStock ?? 115} units</strong></span>
                           <span className="text-[#E51A24] font-mono">Min Threshold: {matchedProduct?.reorderThreshold ?? 200}</span>
                         </div>
-                        <div className="w-full h-2 bg-[#1E223D]/10 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-[#0F172A]/10 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-[#E51A24] to-[#ff4d4d] rounded-full"
                             style={{ width: `${Math.min(100, ((matchedProduct?.currentStock ?? 115) / (matchedProduct?.reorderThreshold ?? 200)) * 100)}%` }}
@@ -387,34 +387,34 @@ export default function BentoHomeDashboard({
                           <ShieldAlert className="h-4 w-4 text-[#E51A24]" />
                           <span className="tracking-wide uppercase">Critical Disruption Detected</span>
                         </div>
-                        <h3 className="text-2xl font-extrabold text-[#1E223D] tracking-tight leading-snug">
+                        <h3 className="text-2xl font-extrabold text-[#0F172A] tracking-tight leading-snug">
                           {currentRisk.productName}
                         </h3>
-                        <p className="text-xs text-[#1E223D]/80 mt-1 leading-relaxed font-medium">
+                        <p className="text-xs text-[#0F172A]/80 mt-1 leading-relaxed font-medium">
                           {matchedProduct?.description || 'High-density 4nm tensor chip for edge robotics and autonomous systems.'}
                         </p>
                       </div>
 
                       {/* 3 Metrics Cards Grid */}
                       <div className="grid grid-cols-3 gap-2.5 text-xs">
-                        <div className="bg-white/95 border border-[#E2D5AC] rounded-xl p-2.5 shadow-2xs">
-                          <span className="text-[10px] uppercase font-bold text-[#1E223D]/65 block">Primary Vendor</span>
-                          <span className="font-bold text-[#1E223D] truncate block text-[11px]" title={currentRisk.supplierName}>
+                        <div className="bg-slate-50/90 border border-slate-200/90 rounded-xl p-2.5 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-[#0F172A]/65 block">Primary Vendor</span>
+                          <span className="font-bold text-[#0F172A] truncate block text-[11px]" title={currentRisk.supplierName}>
                             {currentRisk.supplierName}
                           </span>
                           <span className="text-[10px] text-[#E51A24] font-bold">DISRUPTED</span>
                         </div>
 
-                        <div className="bg-white/95 border border-[#E2D5AC] rounded-xl p-2.5 shadow-2xs">
-                          <span className="text-[10px] uppercase font-bold text-[#1E223D]/65 block">Lead Time</span>
-                          <span className="font-mono font-bold text-[#1E223D] text-sm block">
+                        <div className="bg-slate-50/90 border border-slate-200/90 rounded-xl p-2.5 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-[#0F172A]/65 block">Lead Time</span>
+                          <span className="font-mono font-bold text-[#0F172A] text-sm block">
                             {currentRisk.supplierLeadTimeDays || 24}d
                           </span>
-                          <span className="text-[10px] text-[#1E223D]/70 font-semibold">vs {currentRisk.daysUntilStockout}d stock</span>
+                          <span className="text-[10px] text-[#0F172A]/70 font-semibold">vs {currentRisk.daysUntilStockout}d stock</span>
                         </div>
 
-                        <div className="bg-white/95 border border-[#E2D5AC] rounded-xl p-2.5 shadow-2xs">
-                          <span className="text-[10px] uppercase font-bold text-[#1E223D]/65 block">Deficit Gap</span>
+                        <div className="bg-slate-50/90 border border-slate-200/90 rounded-xl p-2.5 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-[#0F172A]/65 block">Deficit Gap</span>
                           <span className="font-mono font-extrabold text-[#E51A24] text-sm block">
                             -{( (currentRisk.supplierLeadTimeDays || 24) - currentRisk.daysUntilStockout ).toFixed(1)}d
                           </span>
@@ -423,7 +423,7 @@ export default function BentoHomeDashboard({
                       </div>
 
                       {/* AI Strategic Recommendation Box */}
-                      <div className="bg-white/95 border border-[#E2D5AC] rounded-xl p-3 shadow-xs flex items-start space-x-3">
+                      <div className="bg-slate-50/90 border border-slate-200/90 rounded-xl p-3 shadow-2xs flex items-start space-x-3">
                         <div className="h-7 w-7 rounded-lg bg-[#E51A24]/10 border border-[#E51A24]/20 flex items-center justify-center text-[#E51A24] shrink-0 mt-0.5">
                           <Sparkles className="h-3.5 w-3.5 text-[#E51A24]" />
                         </div>
@@ -432,11 +432,11 @@ export default function BentoHomeDashboard({
                             <span className="text-[10px] uppercase font-extrabold tracking-wider text-[#E51A24]">
                               AI Strategic Directive
                             </span>
-                            <span className="text-[10px] font-mono font-bold text-[#1E223D]/60">
+                            <span className="text-[10px] font-mono font-bold text-[#0F172A]/60">
                               Action: {currentRisk.actionRecommended || 'EXPEDITE'}
                             </span>
                           </div>
-                          <p className="text-xs font-semibold text-[#1E223D] mt-0.5 leading-snug">
+                          <p className="text-xs font-semibold text-[#0F172A] mt-0.5 leading-snug">
                             {currentRisk.aiRecommendation || 'Divert replenishment orders to backup supplier Apex Microelectronics immediately.'}
                           </p>
                         </div>
@@ -453,9 +453,9 @@ export default function BentoHomeDashboard({
                         </button>
                         <button
                           onClick={() => setActiveCanvasView('GRAPH')}
-                          className="px-5 py-2.5 rounded-full bg-[#1E223D] hover:bg-black text-[#FFFDD0] text-xs font-bold transition shadow-xs flex items-center space-x-1.5 cursor-pointer"
+                          className="px-5 py-2.5 rounded-full bg-[#1E223D] hover:bg-black text-white text-xs font-bold transition shadow-xs flex items-center space-x-1.5 cursor-pointer"
                         >
-                          <Network className="h-3.5 w-3.5 text-[#FFFDD0]" />
+                          <Network className="h-3.5 w-3.5 text-white" />
                           <span>View Topology</span>
                         </button>
                       </div>
@@ -511,23 +511,23 @@ export default function BentoHomeDashboard({
               </div>
             </div>
 
-            {/* Bottom-Center Bento Card: Parameters Widget - Cream #FFFDD0 Container */}
+            {/* Bottom-Center Bento Card: Parameters Widget - Full White Container */}
             <div
               style={{
-                background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                border: '1.5px solid #E2D5AC',
-                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                color: '#1E223D'
+                background: '#FFFFFF',
+                border: '1.5px solid #E2E8F0',
+                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                color: '#0F172A'
               }}
               className="rounded-2xl p-6 lg:p-7 space-y-4 shadow-sm"
             >
               {/* Top Title Pill */}
               <div className="flex items-center justify-between">
-                <span className="rounded-full bg-[#1E223D] px-3.5 py-1 text-xs font-bold text-[#FFFDD0] flex items-center space-x-2 shadow-xs">
-                  <Info className="h-3.5 w-3.5 text-[#FFFDD0]" />
+                <span className="rounded-full bg-[#0F172A] px-3.5 py-1 text-xs font-bold text-white flex items-center space-x-2 shadow-xs">
+                  <Info className="h-3.5 w-3.5 text-white" />
                   <span>Deterministic Engine Telemetry Matrix</span>
                 </span>
-                <span className="text-xs text-[#1E223D]/75 font-mono font-bold">
+                <span className="text-xs text-[#0F172A]/75 font-mono font-bold">
                   Formula: Stock / (DailyAvg &times; 1.20)
                 </span>
               </div>
@@ -535,51 +535,51 @@ export default function BentoHomeDashboard({
               {/* 8 Pill Chips Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center">
                 {/* 1 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">Runway</span>
-                  <span className="font-mono font-extrabold text-[#1E223D] text-base">{currentRisk.daysUntilStockout}d</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">Runway</span>
+                  <span className="font-mono font-extrabold text-[#0F172A] text-base">{currentRisk.daysUntilStockout}d</span>
                 </div>
                 {/* 2 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">Daily Use</span>
-                  <span className="font-mono font-extrabold text-[#1E223D] text-base">{currentRisk.averageDailyUsage || 24.6}/d</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">Daily Use</span>
+                  <span className="font-mono font-extrabold text-[#0F172A] text-base">{currentRisk.averageDailyUsage || 24.6}/d</span>
                 </div>
                 {/* 3 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">Lead Time</span>
-                  <span className="font-mono font-extrabold text-[#1E223D] text-base">{currentRisk.supplierLeadTimeDays || 24}d</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">Lead Time</span>
+                  <span className="font-mono font-extrabold text-[#0F172A] text-base">{currentRisk.supplierLeadTimeDays || 24}d</span>
                 </div>
                 {/* 4 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">Buffer</span>
-                  <span className="font-mono font-extrabold text-[#1E223D] text-base">1.20x</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">Buffer</span>
+                  <span className="font-mono font-extrabold text-[#0F172A] text-base">1.20x</span>
                 </div>
                 {/* 5 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">Deficit</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">Deficit</span>
                   <span className="font-mono font-extrabold text-[#E51A24] text-base">-14.2d</span>
                 </div>
                 {/* 6 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">Severity</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">Severity</span>
                   <span className="font-extrabold text-[#E51A24] text-xs uppercase">{currentRisk.severity}</span>
                 </div>
                 {/* 7 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">Action</span>
-                  <span className="font-mono font-extrabold text-[#1E223D] text-xs truncate">Expedite PO</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">Action</span>
+                  <span className="font-mono font-extrabold text-[#0F172A] text-xs truncate">Expedite PO</span>
                 </div>
                 {/* 8 */}
-                <div className="rounded-xl bg-white/95 p-3 border border-[#E2D5AC] flex flex-col items-center justify-center shadow-xs">
-                  <span className="text-[10px] uppercase font-bold text-[#1E223D]/70">AI Gate</span>
+                <div className="rounded-xl bg-slate-50/90 p-3 border border-slate-200/90 flex flex-col items-center justify-center shadow-2xs">
+                  <span className="text-[10px] uppercase font-bold text-[#0F172A]/70">AI Gate</span>
                   <span className="font-mono font-extrabold text-emerald-700 text-xs">Verified</span>
                 </div>
               </div>
 
               {/* Progress Slider Line with Scrubber Thumb */}
               <div className="space-y-2 pt-2">
-                <div className="flex justify-between text-xs font-mono text-[#1E223D]">
-                  <span>Safety Margin Ratio: <strong className="text-[#1E223D] text-sm font-bold">{sliderVal}%</strong></span>
+                <div className="flex justify-between text-xs font-mono text-[#0F172A]">
+                  <span>Safety Margin Ratio: <strong className="text-[#0F172A] text-sm font-bold">{sliderVal}%</strong></span>
                   <span className="text-[#E51A24] font-extrabold">Deficit Zone (&lt; 50%)</span>
                 </div>
                 <div className="relative flex items-center">
@@ -589,7 +589,7 @@ export default function BentoHomeDashboard({
                     max="100"
                     value={sliderVal}
                     onChange={(e) => setSliderVal(Number(e.target.value))}
-                    className="w-full h-2 bg-[#1E223D]/15 rounded-lg appearance-none cursor-pointer accent-[#E51A24]"
+                    className="w-full h-2 bg-[#0F172A]/15 rounded-lg appearance-none cursor-pointer accent-[#E51A24]"
                   />
                 </div>
               </div>
@@ -598,17 +598,17 @@ export default function BentoHomeDashboard({
           </div>
 
           {/* ============================================================ */}
-          {/* 3. RIGHT COLUMN: Bento Cards in Cream #FFFDD0 Luxury Style  */}
+          {/* 3. RIGHT COLUMN: Bento Cards in Pure White #FFFFFF Modern Style  */}
           {/* ============================================================ */}
           <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col gap-5 shrink-0">
             
-            {/* Top Right Header Capsule Button - Cream #FFFDD0 Container */}
+            {/* Top Right Header Capsule Button - Full White Container */}
             <div
               style={{
-                background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                border: '1.5px solid #E2D5AC',
-                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                color: '#1E223D'
+                background: '#FFFFFF',
+                border: '1.5px solid #E2E8F0',
+                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                color: '#0F172A'
               }}
               className="rounded-2xl p-4 flex items-center justify-between shadow-sm"
             >
@@ -617,37 +617,37 @@ export default function BentoHomeDashboard({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E51A24] opacity-75" />
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#E51A24]" />
                 </span>
-                <span className="text-sm font-extrabold text-[#1E223D]">
+                <span className="text-sm font-extrabold text-[#0F172A]">
                   {summary?.criticalRisks || 2} Critical Threat{summary?.criticalRisks > 1 ? 's' : ''}
                 </span>
               </div>
               <button
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className="flex items-center space-x-1.5 rounded-full bg-[#1E223D] hover:bg-black text-[#FFFDD0] px-4 py-1.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                className="flex items-center space-x-1.5 rounded-full bg-[#0F172A] hover:bg-black text-white px-4 py-1.5 text-xs font-bold transition shadow-xs cursor-pointer"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>Sync</span>
               </button>
             </div>
 
-            {/* Middle Right: Interactive Threat Dossier — Cream #FFFDD0 Container */}
+            {/* Middle Right: Interactive Threat Dossier — Full White Container */}
             <div
               style={{
-                background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                border: '1.5px solid #E2D5AC',
-                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                color: '#1E223D'
+                background: '#FFFFFF',
+                border: '1.5px solid #E2E8F0',
+                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                color: '#0F172A'
               }}
               className="relative rounded-2xl p-5 flex flex-col justify-between min-h-[420px] shadow-sm overflow-visible"
             >
 
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-[#E2D5AC]/80 pb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#1E223D]">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
                   Threat Stack ({activeRiskIndex + 1}/{topRisks.length})
                 </span>
-                <span className="text-[10px] font-bold text-[#FFFDD0] uppercase tracking-widest bg-[#1E223D] px-2.5 py-0.5 rounded-full shadow-xs">
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest bg-[#0F172A] px-2.5 py-0.5 rounded-full shadow-xs">
                   Threat Dossier
                 </span>
               </div>
@@ -655,7 +655,7 @@ export default function BentoHomeDashboard({
               {/* Folder view — React Bits <Folder /> */}
               <div className="relative flex-1 flex flex-col items-center justify-center gap-5 py-6">
                 <Folder
-                  color="#1E223D"
+                  color="#0F172A"
                   size="medium"
                   items={topRisks.slice(0, 3).map((r, i) => (
                     <div
@@ -689,15 +689,15 @@ export default function BentoHomeDashboard({
                     </div>
                   ))}
                 />
-                <p className="text-[10px] font-bold text-[#1E223D]/70 uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-[#0F172A]/70 uppercase tracking-widest">
                   Click to open &bull; {topRisks.length} active threats
                 </p>
               </div>
 
               {/* Shader Live Sync Toggle + Authorize Mitigation Button */}
-              <div className="space-y-2.5 z-20 pt-2 border-t border-[#E2D5AC]/80">
+              <div className="space-y-2.5 z-20 pt-2 border-t border-slate-200">
                 <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="font-bold text-[#1E223D] truncate max-w-[210px]">
+                  <span className="font-bold text-[#0F172A] truncate max-w-[210px]">
                     Focus: {currentRisk.productName}
                   </span>
                   <span className="font-bold text-[#E51A24]">
@@ -712,20 +712,20 @@ export default function BentoHomeDashboard({
 
             </div>
 
-            {/* Bottom Right: Fan-Out Cards Deck - Cream #FFFDD0 Container */}
+            {/* Bottom Right: Fan-Out Cards Deck - Full White Container */}
             <div
               style={{
-                background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                border: '1.5px solid #E2D5AC',
-                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                color: '#1E223D'
+                background: '#FFFFFF',
+                border: '1.5px solid #E2E8F0',
+                boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                color: '#0F172A'
               }}
               className="rounded-2xl p-5 space-y-3.5 shadow-sm"
             >
               
               {/* Top Title Pill + Circular Indicator */}
               <div className="flex items-center justify-between">
-                <span className="rounded-full bg-[#1E223D] text-[#FFFDD0] px-3.5 py-1 text-xs font-bold shadow-xs">
+                <span className="rounded-full bg-[#0F172A] text-white px-3.5 py-1 text-xs font-bold shadow-xs">
                   Autonomous Actions Queue
                 </span>
                 <span className="h-2.5 w-2.5 rounded-full bg-[#E51A24] animate-pulse" />
@@ -734,12 +734,12 @@ export default function BentoHomeDashboard({
               {/* Fan-deck cards preview */}
               <div
                 onClick={() => onNavigateTab && onNavigateTab('inbox')}
-                className="cursor-pointer group relative h-40 rounded-xl bg-white/95 border border-[#E2D5AC] hover:border-[#1E223D]/30 transition p-3.5 flex flex-col justify-between overflow-hidden shadow-xs"
+                className="cursor-pointer group relative h-40 rounded-xl bg-slate-50/90 border border-slate-200/90 hover:border-[#0F172A]/30 transition p-3.5 flex flex-col justify-between overflow-hidden shadow-2xs"
               >
                 {/* 3 Fanned-Out Rotated Cards */}
                 <div className="relative w-full h-24 flex items-center justify-center">
-                  <div className="absolute top-1 left-6 w-28 h-20 rounded-xl bg-[#D8C5A3] -rotate-[16deg] shadow-sm pointer-events-none group-hover:-rotate-[20deg] transition-transform" />
-                  <div className="absolute top-0.5 left-14 w-30 h-20 rounded-xl bg-[#1E223D] -rotate-[8deg] shadow-sm pointer-events-none group-hover:-rotate-[10deg] transition-transform" />
+                  <div className="absolute top-1 left-6 w-28 h-20 rounded-xl bg-slate-200 -rotate-[16deg] shadow-sm pointer-events-none group-hover:-rotate-[20deg] transition-transform" />
+                  <div className="absolute top-0.5 left-14 w-30 h-20 rounded-xl bg-[#0F172A] -rotate-[8deg] shadow-sm pointer-events-none group-hover:-rotate-[10deg] transition-transform" />
                   <div className="absolute top-0 left-22 w-36 h-22 rounded-xl bg-[#E51A24] p-2.5 shadow-md rotate-0 pointer-events-none group-hover:scale-105 transition-transform flex flex-col justify-between">
                     <div className="flex items-center justify-between text-[10px] font-bold text-white">
                       <span>Procurement PO Draft</span>
@@ -752,7 +752,7 @@ export default function BentoHomeDashboard({
                 </div>
 
                 {/* Bottom interactive link */}
-                <div className="w-full flex items-center justify-between text-xs font-bold text-[#1E223D] relative z-10 pt-1.5 border-t border-[#E2D5AC]/80 group-hover:text-[#E51A24] transition-colors">
+                <div className="w-full flex items-center justify-between text-xs font-bold text-[#0F172A] relative z-10 pt-1.5 border-t border-slate-200 group-hover:text-[#E51A24] transition-colors">
                   <span>Open Supplier Inbox</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1.5 transition-transform text-[#E51A24]" />
                 </div>

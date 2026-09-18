@@ -20,11 +20,11 @@ export default function ToastContainer() {
         } else if (newToast.type === 'success') {
           toastIcon = <CheckCircle2 className="h-4 w-4 text-emerald-400 stroke-[2.5]" />;
         } else if (newToast.type === 'simulation') {
-          toastIcon = <Zap className="h-4 w-4 text-[#FFFDD0] stroke-[2.5]" />;
+          toastIcon = <Zap className="h-4 w-4 text-white stroke-[2.5]" />;
         } else if (newToast.type === 'communication') {
-          toastIcon = <Mail className="h-4 w-4 text-[#FFFDD0] stroke-[2.5]" />;
+          toastIcon = <Mail className="h-4 w-4 text-white stroke-[2.5]" />;
         } else {
-          toastIcon = <Info className="h-4 w-4 text-[#FFFDD0] stroke-[2.5]" />;
+          toastIcon = <Info className="h-4 w-4 text-white stroke-[2.5]" />;
         }
       }
 
@@ -62,9 +62,9 @@ export default function ToastContainer() {
             icon={toast.icon}
             actionLabel={toast.actionLabel}
             onAction={toast.onAction}
-            background={toast.background || '#222B14'}
-            color={toast.color || '#FFFDD0'}
-            fuseColor={toast.fuseColor || '#FFFDD0'}
+            background={toast.background || '#1E223D'}
+            color={toast.color || '#FFFFFF'}
+            fuseColor={toast.fuseColor || '#FFFFFF'}
             width={360}
             radius={16}
             slideMs={400}
