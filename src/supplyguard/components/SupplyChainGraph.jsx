@@ -40,21 +40,21 @@ export default function SupplyChainGraph({ products = [], suppliers = [], risks 
   return (
     <div className="space-y-5 text-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#E2D5AC] pb-5 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-5 gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-[#1E223D] flex items-center space-x-2.5">
-            <span className="p-2 rounded-xl bg-white/90 text-[#E51A24] border border-[#E2D5AC]">
+          <h2 className="text-xl font-extrabold text-[#0F172A] flex items-center space-x-2.5">
+            <span className="p-2 rounded-xl bg-slate-50/90 text-[#E51A24] border border-slate-200">
               <Network className="h-5 w-5" />
             </span>
             <span>Interactive Supply Chain Topology Graph</span>
           </h2>
-          <p className="text-xs text-[#1E223D]/75 mt-1">
+          <p className="text-xs text-[#0F172A]/75 mt-1">
             Node-link relational topology mapping products to primary and backup suppliers with risk-reactive edges.
           </p>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center space-x-4 text-xs font-semibold bg-white/95 px-4 py-2 rounded-xl border border-[#E2D5AC] shadow-2xs text-[#1E223D]">
+        <div className="flex items-center space-x-4 text-xs font-semibold bg-white/95 px-4 py-2 rounded-xl border border-slate-200 shadow-2xs text-[#0F172A]">
           <span className="flex items-center space-x-1.5 text-[#E51A24]">
             <span className="h-2.5 w-2.5 rounded-full bg-[#E51A24]"></span>
             <span>Critical</span>

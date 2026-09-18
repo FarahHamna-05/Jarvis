@@ -14,14 +14,14 @@ export default function AuditTrail({ auditLogs = [] }) {
   return (
     <div className="space-y-5 text-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2D5AC] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h2 className="text-xl font-extrabold text-[#1E223D] flex items-center space-x-2.5">
-            <span className="p-2 rounded-xl bg-white/90 text-[#E51A24] border border-[#E2D5AC]">
+          <h2 className="text-xl font-extrabold text-[#0F172A] flex items-center space-x-2.5">
+            <span className="p-2 rounded-xl bg-slate-50/90 text-[#E51A24] border border-slate-200">
               <History className="h-5 w-5" />
             </span>
             <span>Immutable Human-in-the-Loop Audit Trail</span>
-            <span className="text-xs font-bold text-[#E51A24] bg-white/90 px-2.5 py-0.5 rounded-full border border-[#E2D5AC]">
+            <span className="text-xs font-bold text-[#E51A24] bg-slate-50/90 px-2.5 py-0.5 rounded-full border border-slate-200">
               {auditLogs.length} entries
             </span>
           </h2>

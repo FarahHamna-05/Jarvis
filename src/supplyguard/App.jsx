@@ -471,10 +471,10 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {activeTab === 'products' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -497,10 +497,10 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {activeTab === 'suppliers' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -517,10 +517,10 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {activeTab === 'simulator' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -538,10 +538,10 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
               <div className="max-w-7xl mx-auto w-full space-y-6">
                 <div
                   style={{
-                    background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                    border: '1.5px solid #E2D5AC',
-                    boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                    color: '#1E223D'
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E2E8F0',
+                    boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                    color: '#0F172A'
                   }}
                   className="rounded-2xl p-6 lg:p-7 shadow-lg min-h-[700px]"
                 >
@@ -559,10 +559,10 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {activeTab === 'graph' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >
@@ -578,10 +578,10 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {activeTab === 'audit' && (
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
-                  border: '1.5px solid #E2D5AC',
-                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
-                  color: '#1E223D'
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1)',
+                  color: '#0F172A'
                 }}
                 className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
               >

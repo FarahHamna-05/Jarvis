@@ -143,11 +143,11 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
   return (
     <div className="space-y-6 text-slate-900">
       {/* 1. Header Banner matching Modern UI specification */}
-      <div className="border-b border-[#E2D5AC] pb-5">
+      <div className="border-b border-slate-200 pb-5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E2D5AC] bg-white/90 px-3 py-1 text-xs font-semibold text-[#1E223D]">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50/90 px-3 py-1 text-xs font-semibold text-[#0F172A]">
               <HiSparkles className="size-3.5 text-[#E51A24]" />
               <span>Continuous Inventory Telemetry</span>
             </div>
@@ -262,7 +262,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
         </div>
 
         {/* 2. Department / Category Tabs with Live SKU Counts */}
-        <div className="mt-6 pt-5 border-t border-[#E2D5AC] flex flex-wrap items-center gap-2">
+        <div className="mt-6 pt-5 border-t border-slate-200 flex flex-wrap items-center gap-2">
           {categories.map((cat) => (
             <DeptTab
               key={cat}
@@ -284,13 +284,13 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
           placeholder="Search inventory by SKU name, technical specification, or supplier..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl border border-[#E2D5AC] bg-white/95 pl-10 pr-4 py-3 text-xs sm:text-sm text-[#1E223D] placeholder-slate-400 shadow-2xs focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 focus:outline-none transition"
+          className="w-full rounded-xl border border-slate-200 bg-white/95 pl-10 pr-4 py-3 text-xs sm:text-sm text-[#0F172A] placeholder-slate-400 shadow-2xs focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 focus:outline-none transition"
         />
       </div>
 
       {/* Empty State */}
       {filteredProducts.length === 0 && (
-        <div className="rounded-2xl border border-[#E2D5AC] bg-white/95 p-12 text-center text-slate-500 shadow-2xs">
+        <div className="rounded-2xl border border-slate-200 bg-white/95 p-12 text-center text-slate-500 shadow-2xs">
           <Boxes className="h-10 w-10 text-slate-300 mx-auto mb-2" />
           <p className="font-bold text-slate-700">No SKU items found</p>
           <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or selecting a different category filter.</p>
@@ -299,7 +299,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
 
       {/* MODE 1: MODERN DIRECTORY LIST VIEW (Integrated Component UI) */}
       {viewMode === 'list' && filteredProducts.length > 0 && (
-        <div className="rounded-2xl border border-[#E2D5AC] bg-white/95 px-4 sm:px-6 shadow-2xs">
+        <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 sm:px-6 shadow-2xs">
           <ul role="list" className="divide-y divide-slate-100 p-0 m-0">
             {filteredProducts.map((product) => {
               const isBelowThreshold = product.currentStock <= (product.reorderThreshold || 50);
@@ -652,7 +652,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
             return (
               <div
                 key={product.id}
-                className="rounded-2xl border border-[#E2D5AC] bg-white/95 p-5 flex flex-col justify-between space-y-4 shadow-2xs hover:shadow-md transition"
+                className="rounded-2xl border border-slate-200 bg-white/95 p-5 flex flex-col justify-between space-y-4 shadow-2xs hover:shadow-md transition"
               >
                 <div>
                   {/* Image and Header */}

@@ -29,12 +29,12 @@ export default function SupplierHub({
   return (
     <div className="space-y-5 text-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2D5AC] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
-          <h2 className="text-lg font-bold text-[#1E223D] flex items-center space-x-2.5">
+          <h2 className="text-lg font-bold text-[#0F172A] flex items-center space-x-2.5">
             <Truck className="h-5 w-5 text-[#E51A24]" />
             <span>Supplier Network Directory</span>
-            <span className="text-xs font-semibold text-[#1E223D] bg-white/90 border border-[#E2D5AC] px-2.5 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[#0F172A] bg-slate-50/90 border border-slate-200 px-2.5 py-0.5 rounded-full">
               {suppliers.length} vendors
             </span>
           </h2>
