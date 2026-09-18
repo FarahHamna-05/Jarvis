@@ -103,7 +103,14 @@ function DeptTab({
   );
 }
 
-export default function ProductCatalog({ products = [], onOpenAddProduct, onEditProduct, onDeleteProduct }) {
+export default function ProductCatalog({
+  products = [],
+  onOpenAddProduct,
+  onEditProduct,
+  onDeleteProduct,
+  selectedVoiceProduct,
+  onClearSelectedVoiceProduct
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [viewMode, setViewMode] = useState('list'); // 'list', 'stack', or 'grid'
@@ -160,7 +167,7 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
     return null;
   }, []);
   // Open the AI Voice Sourcing Modal (supports setting initial mode to 'demo' or 'suppliers')
-  const handleOpenVoiceModal = (product, defaultMode = 'suppliers') => {
+  const handleOpenVoiceModal = (product, defaultMode = 'suppliers', autoConnect = false) => {
     setVoiceModalProduct(product);
     setSourcingMode(defaultMode);
     const deficit = Math.max(10, (product.reorderThreshold || 50) - (product.currentStock || 0));
@@ -172,7 +179,23 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
 
     // Initial check if comparison already exists
     fetchComparison(product.id, true);
+
+    if (autoConnect) {
+      setTimeout(() => {
+        handleTriggerVoiceCalls(product);
+      }, 350);
+    }
   };
+
+  // Deep-link effect when navigated with a selected product for voice sourcing
+  useEffect(() => {
+    if (selectedVoiceProduct) {
+      handleOpenVoiceModal(selectedVoiceProduct, 'suppliers', Boolean(selectedVoiceProduct.autoConnect));
+      if (onClearSelectedVoiceProduct) {
+        onClearSelectedVoiceProduct();
+      }
+    }
+  }, [selectedVoiceProduct, onClearSelectedVoiceProduct]);
 
   // Close modal and stop polling / speech
   const handleCloseVoiceModal = () => {
@@ -290,14 +313,15 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
   };
 
   // Trigger Outbound AI Voice Calls via Vapi
-  const handleTriggerVoiceCalls = async () => {
-    if (!voiceModalProduct) return;
+  const handleTriggerVoiceCalls = async (overrideProduct = null) => {
+    const targetProduct = overrideProduct || voiceModalProduct;
+    if (!targetProduct) return;
     setIsCallingSuppliers(true);
     setApprovalSuccess(null);
 
     try {
       const res = await apiClient.post(
-        `/products/${voiceModalProduct.id}/check-suppliers?requiredQuantity=${requiredQuantity}`
+        `/products/${targetProduct.id}/check-suppliers?requiredQuantity=${requiredQuantity}`
       );
       setInitiatedCalls(res.data || []);
 
@@ -717,6 +741,24 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
                       {runwayDays}d runway
                     </span>
 
+                    {/* AI Voice Campaign Call Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenVoiceModal(product, 'suppliers');
+                      }}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-2xs cursor-pointer active:scale-95",
+                        isBelowThreshold
+                          ? "bg-[#E51A24] text-white hover:bg-[#C91822] shadow-red-200 animate-pulse"
+                          : "bg-slate-900 text-white hover:bg-slate-800"
+                      )}
+                      title="Compare Alternate Suppliers & Connect Voice Call"
+                    >
+                      <PhoneCall className="size-3 text-white" />
+                      <span>{isBelowThreshold ? 'Low Stock • Call' : 'Compare & Call'}</span>
+                    </button>
+
                     {/* Action Controls */}
                     <div className="flex items-center gap-1 sm:ml-2">
                       <button
@@ -932,6 +974,22 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          handleOpenVoiceModal(product, 'suppliers');
+                        }}
+                        className={`w-full cursor-pointer rounded-xl py-2.5 px-3 text-xs font-bold shadow-sm transition flex items-center justify-center gap-2 active:scale-95 ${
+                          isBelowThreshold
+                            ? 'bg-[#E51A24] hover:bg-[#C91822] text-white animate-pulse shadow-red-200'
+                            : 'bg-slate-900 hover:bg-slate-800 text-white'
+                        }`}
+                        title="Compare Alternate Suppliers & Connect Voice Call"
+                      >
+                        <PhoneCall className="h-3.5 w-3.5 text-red-300" />
+                        <span>{isBelowThreshold ? 'Low Stock Alert • Connect Voice Call' : 'Compare & Call Suppliers'}</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
                           updatePosition(product.id);
                         }}
                         className="w-full cursor-pointer rounded-full bg-slate-900 hover:bg-slate-800 active:scale-[0.98] py-3 text-xs font-bold text-white shadow-sm transition flex items-center justify-center gap-1.5"
@@ -1115,8 +1173,8 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
                 <div className="flex items-center space-x-1.5">
                   <button
                     onClick={() => handleOpenVoiceModal(product, 'suppliers')}
-                    className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs shadow-sm transition group/btn ${
-                      isAtRisk || product.primarySupplierStatus === 'DISRUPTED'
+                    className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs shadow-sm transition group/btn cursor-pointer ${
+                      isAtRisk || product.primarySupplierStatus === 'DISRUPTED' || isBelowThreshold
                         ? 'bg-gradient-to-r from-[#E51A24] via-rose-600 to-[#C91822] text-white hover:brightness-110 shadow-red-200 animate-pulse'
                         : 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-200'
                     }`}
@@ -1125,7 +1183,9 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
                     <span>
                       {product.primarySupplierStatus === 'DISRUPTED'
                         ? 'Disrupted • AI Sourcing'
-                        : 'AI Voice Sourcing'}
+                        : isBelowThreshold
+                          ? 'Low Stock • Call'
+                          : 'AI Voice Sourcing'}
                     </span>
                   </button>
                   <button
@@ -1204,6 +1264,32 @@ export default function ProductCatalog({ products = [], onOpenAddProduct, onEdit
 
             {/* Modal Scrollable Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+              {/* Critical Low Stock Warning Banner */}
+              {voiceModalProduct.currentStock <= (voiceModalProduct.reorderThreshold || 50) && (
+                <div className="rounded-2xl border border-red-200 bg-red-50/90 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[#E51A24] shadow-xs">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-xl bg-red-100/80 shrink-0">
+                      <Flame className="h-5 w-5 text-[#E51A24]" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-xs uppercase tracking-wider">Critical Low Stock Detected</p>
+                      <p className="text-xs text-slate-700 mt-0.5">
+                        Current stock (<strong>{voiceModalProduct.currentStock} units</strong>) has breached safety threshold (<strong>{voiceModalProduct.reorderThreshold || 50} units</strong>). Connect voice calls to alternate suppliers to replenish inventory immediately.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerVoiceCalls()}
+                    disabled={isCallingSuppliers || isPollingComparison}
+                    className="shrink-0 flex items-center space-x-2 rounded-xl bg-[#E51A24] hover:bg-[#C91822] text-white font-bold px-4 py-2 text-xs shadow-sm transition cursor-pointer active:scale-95"
+                  >
+                    <PhoneCall className="h-3.5 w-3.5" />
+                    <span>Connect Call Now</span>
+                  </button>
+                </div>
+              )}
+
               {/* Approval Success Banner */}
               {approvalSuccess && (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 flex items-start space-x-3 text-emerald-900">

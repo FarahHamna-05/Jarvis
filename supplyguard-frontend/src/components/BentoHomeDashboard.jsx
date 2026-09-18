@@ -24,7 +24,8 @@ import {
   Image as ImageIcon,
   CheckCheck,
   User,
-  LogOut
+  LogOut,
+  PhoneCall
 } from 'lucide-react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import FolderFloat from './FolderFloat';
@@ -152,7 +153,8 @@ export default function BentoHomeDashboard({
   currentUser,
   activeTab = 'dashboard',
   onOpenAuth,
-  onLogout
+  onLogout,
+  onOpenVoiceSourcing
 }) {
   const [activeRiskIndex, setActiveRiskIndex] = useState(0);
   const [aiPromptInput, setAiPromptInput] = useState('');
@@ -376,6 +378,24 @@ export default function BentoHomeDashboard({
                             style={{ width: `${Math.min(100, ((matchedProduct?.currentStock ?? 115) / (matchedProduct?.reorderThreshold ?? 200)) * 100)}%` }}
                           />
                         </div>
+                        {(matchedProduct?.currentStock ?? 115) <= (matchedProduct?.reorderThreshold ?? 200) && (
+                          <div className="flex items-center justify-between pt-1 text-[11px]">
+                            <span className="text-xs font-bold text-[#E51A24] flex items-center space-x-1">
+                              <AlertTriangle className="h-3 w-3 text-[#E51A24]" />
+                              <span>Low Stock Alert</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const target = matchedProduct || currentRisk;
+                                if (onOpenVoiceSourcing) onOpenVoiceSourcing(target);
+                              }}
+                              className="text-[11px] font-bold text-slate-900 hover:text-[#E51A24] underline flex items-center space-x-1 cursor-pointer"
+                            >
+                              <span>Campaign & Call &raquo;</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -443,17 +463,29 @@ export default function BentoHomeDashboard({
                       </div>
 
                       {/* Action CTA Bar */}
-                      <div className="flex items-center space-x-3 pt-0.5">
+                      <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
                         <button
                           onClick={() => onOpenMitigationModal && onOpenMitigationModal(currentRisk)}
-                          className="px-6 py-2.5 rounded-full bg-[#E51A24] hover:bg-[#C91822] text-white text-xs font-extrabold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center space-x-2 cursor-pointer"
+                          className="px-5 py-2.5 rounded-full bg-[#E51A24] hover:bg-[#C91822] text-white text-xs font-extrabold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center space-x-2 cursor-pointer"
                         >
                           <Zap className="h-3.5 w-3.5 fill-white" />
                           <span>Execute Mitigation Plan</span>
                         </button>
                         <button
+                          type="button"
+                          onClick={() => {
+                            const target = matchedProduct || currentRisk;
+                            if (onOpenVoiceSourcing) onOpenVoiceSourcing(target);
+                          }}
+                          className="px-4 py-2.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs flex items-center space-x-1.5 cursor-pointer border border-slate-700 active:scale-95"
+                          title="Open Sourcing Campaign & Connect Call to Alternate Suppliers"
+                        >
+                          <PhoneCall className="h-3.5 w-3.5 text-red-400 animate-pulse" />
+                          <span>Compare & Call Suppliers</span>
+                        </button>
+                        <button
                           onClick={() => setActiveCanvasView('GRAPH')}
-                          className="px-5 py-2.5 rounded-full bg-[#1E223D] hover:bg-black text-white text-xs font-bold transition shadow-xs flex items-center space-x-1.5 cursor-pointer"
+                          className="px-4 py-2.5 rounded-full bg-[#1E223D] hover:bg-black text-white text-xs font-bold transition shadow-xs flex items-center space-x-1.5 cursor-pointer"
                         >
                           <Network className="h-3.5 w-3.5 text-white" />
                           <span>View Topology</span>
@@ -708,6 +740,19 @@ export default function BentoHomeDashboard({
                 <SwipeToAuthorizeButton
                   onAuthorize={() => onOpenMitigationModal && onOpenMitigationModal(currentRisk)}
                 />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = matchedProduct || currentRisk;
+                    if (onOpenVoiceSourcing) onOpenVoiceSourcing(target);
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer border border-slate-700 active:scale-95"
+                  title="Launch Sourcing Campaign & Connect Voice Call"
+                >
+                  <PhoneCall className="h-3.5 w-3.5 text-red-400 animate-pulse" />
+                  <span>Compare & Call Suppliers</span>
+                </button>
               </div>
 
             </div>

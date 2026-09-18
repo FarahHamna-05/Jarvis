@@ -82,6 +82,25 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showDetailedFeed, setShowDetailedFeed] = useState(false);
+  const [selectedVoiceProduct, setSelectedVoiceProduct] = useState(null);
+
+  const handleOpenVoiceSourcing = useCallback((productOrRisk, autoConnect = false) => {
+    if (!productOrRisk) return;
+    let target = null;
+    if (productOrRisk.productId) {
+      target = products.find((p) => p.id === productOrRisk.productId || p.id === productOrRisk.product_id);
+    }
+    if (!target && productOrRisk.id) {
+      target = products.find((p) => p.id === productOrRisk.id) || productOrRisk;
+    }
+    if (!target && products.length > 0) {
+      target = products[0];
+    }
+    if (target) {
+      setSelectedVoiceProduct({ ...target, autoConnect });
+      setActiveTab('products');
+    }
+  }, [products]);
 
   // Load all telemetry
   const fetchAllData = useCallback(async () => {
@@ -426,6 +445,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
                   activeTab={activeTab}
                   onOpenAuth={() => setIsAuthModalOpen(true)}
                   onLogout={handleLogout}
+                  onOpenVoiceSourcing={handleOpenVoiceSourcing}
                 />
 
                 {/* Collapsible Deep-Dive Risk Feed & KPI Statistics */}
@@ -460,6 +480,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
                         }
                         onOpenMitigationModal={(event) => setActiveMitigationEvent(event)}
                         onOpenDraftEmail={handleDraftEmailForRisk}
+                        onOpenVoiceSourcing={handleOpenVoiceSourcing}
                       />
                     </div>
                   )}
@@ -480,6 +501,8 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
               >
                 <ProductCatalog
                   products={products}
+                  selectedVoiceProduct={selectedVoiceProduct}
+                  onClearSelectedVoiceProduct={() => setSelectedVoiceProduct(null)}
                   onOpenAddProduct={(initialData) => {
                     setEditingProduct(initialData && typeof initialData === 'object' && initialData.name ? initialData : null);
                     setIsProductModalOpen(true);
@@ -645,6 +668,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
           suppliers={suppliers}
           onClose={() => setActiveMitigationEvent(null)}
           onApprove={handleApproveMitigation}
+          onOpenVoiceSourcing={handleOpenVoiceSourcing}
         />
       )}
 

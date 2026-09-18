@@ -152,11 +152,13 @@ public class RiskEngineService {
 
         // Check trigger condition:
         // 1. Primary supplier is marked DISRUPTED, OR
-        // 2. Risk severity is CRITICAL (runway depleted below lead time)
+        // 2. Risk severity is CRITICAL (runway depleted below lead time), OR
+        // 3. Current stock is at or below the reorder threshold (low stock inventory threat)
         boolean isSupplierDisrupted = primarySupplier != null && "DISRUPTED".equalsIgnoreCase(primarySupplier.getStatus());
         boolean isCritical = "CRITICAL".equalsIgnoreCase(savedEvent.getSeverity());
+        boolean isLowStock = product.getCurrentStock() != null && product.getReorderThreshold() != null && product.getCurrentStock() <= product.getReorderThreshold();
 
-        if (!isSupplierDisrupted && !isCritical) {
+        if (!isSupplierDisrupted && !isCritical && !isLowStock) {
             return;
         }
 
@@ -187,8 +189,8 @@ public class RiskEngineService {
         // Asynchronously dispatch calls via Vapi so risk calculation thread returns immediately
         CompletableFuture.runAsync(() -> {
             try {
-                logger.info("⚡ [AUTONOMOUS AI VOICE TRIGGER] Calling alternate suppliers for Product '{}' (Disrupted: {}, Severity: {}, Needed: {} units)",
-                        product.getName(), isSupplierDisrupted, savedEvent.getSeverity(), neededQty);
+                logger.info("⚡ [AUTONOMOUS AI VOICE TRIGGER] Calling alternate suppliers for Product '{}' (Low Stock: {}, Disrupted: {}, Severity: {}, Needed: {} units)",
+                        product.getName(), isLowStock, isSupplierDisrupted, savedEvent.getSeverity(), neededQty);
                 supplierComparisonService.checkAllSuppliers(product.getId(), neededQty);
             } catch (Exception e) {
                 logger.warn("Autonomous supplier call initiation encountered error: {}", e.getMessage());

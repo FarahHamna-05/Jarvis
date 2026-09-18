@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Check, X, ShieldAlert, Sparkles, Truck, ShoppingCart } from 'lucide-react';
+import { Check, X, ShieldAlert, Sparkles, Truck, ShoppingCart, PhoneCall } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function MitigationModal({ event, suppliers = [], onClose, onApprove }) {
+export default function MitigationModal({ event, suppliers = [], onClose, onApprove, onOpenVoiceSourcing }) {
   const [selectedAlternateId, setSelectedAlternateId] = useState('');
   const [orderQuantity, setOrderQuantity] = useState(
     Math.round(Math.max(250, (event?.averageDailyUsage || 20) * 30))
@@ -145,7 +145,22 @@ export default function MitigationModal({ event, suppliers = [], onClose, onAppr
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 flex-wrap gap-y-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenVoiceSourcing) {
+                onOpenVoiceSourcing(event);
+              }
+              onClose();
+            }}
+            className="flex items-center space-x-1.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-bold px-3.5 py-2.5 text-xs shadow-xs transition mr-auto cursor-pointer active:scale-95"
+            title="Compare & Call Alternate Suppliers via Voice Campaign"
+          >
+            <PhoneCall className="h-3.5 w-3.5 text-red-400 animate-pulse" />
+            <span>Compare & Call Suppliers</span>
+          </button>
+
           <button
             onClick={() => handleConfirmApproval(false)}
             disabled={isSubmitting}

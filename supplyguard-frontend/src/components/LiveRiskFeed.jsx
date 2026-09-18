@@ -12,7 +12,8 @@ import {
   X,
   TrendingDown,
   Info,
-  CheckCheck
+  CheckCheck,
+  PhoneCall
 } from 'lucide-react';
 
 export default function LiveRiskFeed({
@@ -21,7 +22,8 @@ export default function LiveRiskFeed({
   onOpenMitigationModal,
   onOpenDraftEmail,
   filter = 'ALL',
-  setFilter
+  setFilter,
+  onOpenVoiceSourcing
 }) {
   const [expandedId, setExpandedId] = useState(null);
 
@@ -181,6 +183,16 @@ export default function LiveRiskFeed({
                         <span>Review & Approve</span>
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => onOpenVoiceSourcing && onOpenVoiceSourcing(event)}
+                      className="flex items-center space-x-1.5 rounded-xl border border-slate-300 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 text-xs font-semibold shadow-xs transition cursor-pointer"
+                      title="Open AI Voice Sourcing Campaign & Compare Suppliers Live"
+                    >
+                      <PhoneCall className="h-3.5 w-3.5 text-red-400" />
+                      <span className="hidden sm:inline">Compare & Call</span>
+                    </button>
 
                     <button
                       onClick={() => onOpenDraftEmail && onOpenDraftEmail(event)}
