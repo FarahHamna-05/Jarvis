@@ -18,10 +18,16 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import com.supplyguard.repository.mongo.PendingCallRepository;
+import com.supplyguard.document.PendingCall;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +42,21 @@ public class RiskEngineService {
     private final AuditLogRepository auditLogRepository;
     private final AIReasoningService aiReasoningService;
     private final SimpMessagingTemplate messagingTemplate;
+
+    @Autowired(required = false)
+    @Lazy
+    private SupplierComparisonService supplierComparisonService;
+
+    @Autowired(required = false)
+    private PendingCallRepository pendingCallRepository;
+
+    public void setSupplierComparisonService(SupplierComparisonService supplierComparisonService) {
+        this.supplierComparisonService = supplierComparisonService;
+    }
+
+    public void setPendingCallRepository(PendingCallRepository pendingCallRepository) {
+        this.pendingCallRepository = pendingCallRepository;
+    }
 
     /**
      * Deterministic risk recalculation for a single product.
@@ -114,7 +135,65 @@ public class RiskEngineService {
             logger.warn("WebSocket broadcast failed: {}", e.getMessage());
         }
 
+        // 11. Autonomous AI Voice Call Trigger on Disruption or Critical Runway
+        triggerAutonomousVoiceSourcingIfNeeded(product, primarySupplier, savedEvent);
+
         return savedEvent;
+    }
+
+    /**
+     * Autonomously triggers Vapi AI voice calls to alternate suppliers if a supplier
+     * is disrupted or stockout runway reaches a critical threshold.
+     */
+    private void triggerAutonomousVoiceSourcingIfNeeded(Product product, Supplier primarySupplier, RiskEvent savedEvent) {
+        if (supplierComparisonService == null || product == null) {
+            return;
+        }
+
+        // Check trigger condition:
+        // 1. Primary supplier is marked DISRUPTED, OR
+        // 2. Risk severity is CRITICAL (runway depleted below lead time)
+        boolean isSupplierDisrupted = primarySupplier != null && "DISRUPTED".equalsIgnoreCase(primarySupplier.getStatus());
+        boolean isCritical = "CRITICAL".equalsIgnoreCase(savedEvent.getSeverity());
+
+        if (!isSupplierDisrupted && !isCritical) {
+            return;
+        }
+
+        // Must have alternate suppliers registered
+        if (product.getAlternateSupplierIds() == null || product.getAlternateSupplierIds().isEmpty()) {
+            logger.info("Product '{}' has no alternate suppliers registered for autonomous voice sourcing.", product.getName());
+            return;
+        }
+
+        // Debounce: prevent duplicate call bursts within 10 minutes for the same product
+        if (pendingCallRepository != null) {
+            List<PendingCall> recentCalls = pendingCallRepository.findByProductIdOrderByCreatedAtDesc(product.getId());
+            if (!recentCalls.isEmpty()) {
+                PendingCall latest = recentCalls.get(0);
+                if (latest.getCreatedAt() != null &&
+                        latest.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(10))) {
+                    logger.debug("Autonomous voice calls recently initiated for product '{}' at {}. Debounce active.",
+                            product.getName(), latest.getCreatedAt());
+                    return;
+                }
+            }
+        }
+
+        int reorderThreshold = product.getReorderThreshold() != null ? product.getReorderThreshold() : 50;
+        int currentStock = product.getCurrentStock() != null ? product.getCurrentStock() : 0;
+        int neededQty = Math.max(50, reorderThreshold - currentStock);
+
+        // Asynchronously dispatch calls via Vapi so risk calculation thread returns immediately
+        CompletableFuture.runAsync(() -> {
+            try {
+                logger.info("⚡ [AUTONOMOUS AI VOICE TRIGGER] Calling alternate suppliers for Product '{}' (Disrupted: {}, Severity: {}, Needed: {} units)",
+                        product.getName(), isSupplierDisrupted, savedEvent.getSeverity(), neededQty);
+                supplierComparisonService.checkAllSuppliers(product.getId(), neededQty);
+            } catch (Exception e) {
+                logger.warn("Autonomous supplier call initiation encountered error: {}", e.getMessage());
+            }
+        });
     }
 
     /**

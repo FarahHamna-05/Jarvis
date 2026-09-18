@@ -441,13 +441,17 @@ export default function ProductCatalog({
                 <button
                   onClick={() => handleOpenVoiceModal(product)}
                   className={`w-full flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-bold text-xs shadow-sm transition group/btn ${
-                    isAtRisk
-                      ? 'bg-gradient-to-r from-[#E51A24] via-rose-600 to-[#C91822] text-white hover:brightness-110 shadow-red-200'
+                    isAtRisk || product.primarySupplierStatus === 'DISRUPTED'
+                      ? 'bg-gradient-to-r from-[#E51A24] via-rose-600 to-[#C91822] text-white hover:brightness-110 shadow-red-200 animate-pulse'
                       : 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-200'
                   }`}
                 >
                   <PhoneCall className="h-3.5 w-3.5 text-red-300 group-hover/btn:scale-110 transition-transform" />
-                  <span>Check Availability (AI Voice Call)</span>
+                  <span>
+                    {product.primarySupplierStatus === 'DISRUPTED'
+                      ? 'Disrupted • Autonomous AI Sourcing Active'
+                      : 'Check Availability (AI Voice Call)'}
+                  </span>
                 </button>
               </div>
             </div>
