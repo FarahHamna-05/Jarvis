@@ -12,6 +12,9 @@ export default function CinematicViewer({ onOpenAuth, goToTeamTrigger, goToFront
     try {
       const p = new URLSearchParams(window.location.search).get('progress');
       if (p !== null) return parseFloat(p);
+      const page = new URLSearchParams(window.location.search).get('page');
+      if (page === 'team') return 1.0;
+      if (page === 'faq') return 2.0;
     } catch {
       // ignore
     }
