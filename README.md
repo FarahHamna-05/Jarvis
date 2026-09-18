@@ -254,31 +254,7 @@ For local Vapi webhook testing, ngrok must also be running.
 
 ---
 
-## 10. Screenshots
-
-### Dashboard
-
-![Dashboard](screenshots/dashboard.png)
-
-### Products
-
-![Products](screenshots/products.png)
-
-### Suppliers
-
-![Suppliers](screenshots/suppliers.png)
-
-### Supplier Workflow
-
-![Supplier Workflow](screenshots/simulator.png)
-
-### Audit
-
-![Audit](screenshots/audit.png)
-
----
-
-## 11. Security
+## 10. Security
 
 API keys, passwords, database credentials and other secrets are not
 stored in the repository.
@@ -287,7 +263,7 @@ Use `.env.example` as the configuration template.
 
 ---
 
-## 12. Demo Credentials
+## 11. Demo Credentials
 
 | Role | Username | Password |
 |---|---|---|
