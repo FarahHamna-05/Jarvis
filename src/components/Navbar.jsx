@@ -13,35 +13,23 @@ export default function Navbar({ onOpenAuth, onGoToTeam, onGoToFront, onGoToFaq,
     return null;
   };
 
-  const [isTeamOpen, setIsTeamOpen] = useState(() => getInitialModal() === 'team');
   const [isFaqOpen, setIsFaqOpen] = useState(() => getInitialModal() === 'faq');
   const [activeFaqIndex, setActiveFaqIndex] = useState(0);
 
   useEffect(() => {
     const handlePopState = () => {
       const p = new URLSearchParams(window.location.search).get('page');
-      setIsTeamOpen(p === 'team');
       setIsFaqOpen(p === 'faq');
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const openTeamModal = () => {
-    try {
-      window.history.pushState({}, '', '/?page=team');
-    } catch {}
-    setIsTeamOpen(true);
-    setIsFaqOpen(false);
-    if (onGoToTeam) onGoToTeam();
-  };
-
   const openFaqModal = () => {
     try {
       window.history.pushState({}, '', '/?page=faq');
     } catch {}
     setIsFaqOpen(true);
-    setIsTeamOpen(false);
     if (onGoToFaq) onGoToFaq();
   };
 
@@ -49,7 +37,6 @@ export default function Navbar({ onOpenAuth, onGoToTeam, onGoToFront, onGoToFaq,
     try {
       window.history.pushState({}, '', '/?page=home');
     } catch {}
-    setIsTeamOpen(false);
     setIsFaqOpen(false);
   };
 
@@ -172,10 +159,12 @@ export default function Navbar({ onOpenAuth, onGoToTeam, onGoToFront, onGoToFaq,
           }} className="desktop-nav-pills">
             {/* 1. Our Team */}
             <button
-              onClick={openTeamModal}
+              onClick={() => {
+                if (onGoToTeam) onGoToTeam();
+              }}
               style={{
-                background: isTeamOpen ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
-                color: isTeamOpen ? '#ffffff' : 'rgba(255, 255, 255, 0.78)',
+                background: 'transparent',
+                color: 'rgba(255, 255, 255, 0.78)',
                 border: 'none',
                 borderRadius: '9999px',
                 padding: '6px 14px',
@@ -193,8 +182,8 @@ export default function Navbar({ onOpenAuth, onGoToTeam, onGoToFront, onGoToFaq,
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = isTeamOpen ? '#ffffff' : 'rgba(255, 255, 255, 0.78)';
-                e.currentTarget.style.background = isTeamOpen ? 'rgba(255, 255, 255, 0.16)' : 'transparent';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.78)';
+                e.currentTarget.style.background = 'transparent';
               }}
             >
               <Users size={14} className="text-[#E51A24]" />
@@ -333,7 +322,7 @@ export default function Navbar({ onOpenAuth, onGoToTeam, onGoToFront, onGoToFaq,
             <button
               onClick={() => {
                 setMobileOpen(false);
-                openTeamModal();
+                if (onGoToTeam) onGoToTeam();
               }}
               style={{
                 display: 'flex',
@@ -426,184 +415,7 @@ export default function Navbar({ onOpenAuth, onGoToTeam, onGoToFront, onGoToFaq,
       </header>
 
       {/* ============================================================ */}
-      {/* 1. OUR TEAM MODAL / PAGE VIEW                                */}
-      {/* ============================================================ */}
-      {isTeamOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 200000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            padding: '16px'
-          }}
-          onClick={closeModal}
-        >
-          <div
-            style={{
-              borderRadius: '24px',
-              border: '1.5px solid #E2E8F0',
-              background: '#FFFFFF',
-              color: '#0F172A',
-              padding: '28px',
-              maxWidth: '540px',
-              width: '100%',
-              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 255, 255, 0.1)',
-              animation: 'fadeIn 0.2s ease-out'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'between', borderBottom: '1px solid #E2E8F0', paddingBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                <div style={{
-                  padding: '10px',
-                  borderRadius: '14px',
-                  background: '#FEE2E2',
-                  color: '#E51A24',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Users size={22} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.01em' }}>
-                    BeforeStock Engineering Team
-                  </h3>
-                  <p style={{ fontSize: '12px', color: '#64748B', margin: '2px 0 0 0', fontWeight: 500 }}>
-                    Autonomous Supply Chain Intelligence Core
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={closeModal}
-                style={{
-                  color: '#94A3B8',
-                  background: '#F1F5F9',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.18s'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#0F172A'; e.currentTarget.style.background = '#E2E8F0'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.background = '#F1F5F9'; }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Team Members List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-              {/* Member 1: Dhanush */}
-              <div style={{
-                borderRadius: '16px',
-                background: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                padding: '16px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 800, fontSize: '15px', color: '#0F172A' }}>Dhanush</span>
-                  <span style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    padding: '3px 9px',
-                    borderRadius: '9999px',
-                    background: '#FEE2E2',
-                    color: '#E51A24',
-                    border: '1px solid #FECACA'
-                  }}>
-                    Lead System Architect
-                  </span>
-                </div>
-                <p style={{ color: '#475569', fontSize: '12px', lineHeight: 1.55, margin: 0 }}>
-                  Conceived and engineered BeforeStock's end-to-end architecture, deterministic telemetry calculus, human governance gates, and real-time WebSocket infrastructure.
-                </p>
-              </div>
-
-              {/* Member 2: DeepMind Antigravity Agent */}
-              <div style={{
-                borderRadius: '16px',
-                background: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                padding: '16px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 800, fontSize: '15px', color: '#0F172A' }}>DeepMind Antigravity Agent</span>
-                  <span style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    padding: '3px 9px',
-                    borderRadius: '9999px',
-                    background: '#FEE2E2',
-                    color: '#E51A24',
-                    border: '1px solid #FECACA'
-                  }}>
-                    Autonomous AI Pair Programmer
-                  </span>
-                </div>
-                <p style={{ color: '#475569', fontSize: '12px', lineHeight: 1.55, margin: 0 }}>
-                  Collaborative agentic synthesis of Matter.js 2D zero-gravity physics, React Bits SwipeToast notification loops, Spring Boot REST controllers, and Talentsy-inspired design systems.
-                </p>
-              </div>
-
-              {/* Architecture Badges */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', textAlign: 'center', fontSize: '11px' }}>
-                <div style={{ borderRadius: '12px', background: '#F8FAFC', padding: '10px', border: '1px solid #E2E8F0' }}>
-                  <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>Core Engine</span>
-                  <span style={{ fontWeight: 800, color: '#0F172A' }}>Spring Boot 3.2</span>
-                </div>
-                <div style={{ borderRadius: '12px', background: '#F8FAFC', padding: '10px', border: '1px solid #E2E8F0' }}>
-                  <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>AI Reasoning</span>
-                  <span style={{ fontWeight: 800, color: '#0F172A' }}>Ollama Llama-3</span>
-                </div>
-                <div style={{ borderRadius: '12px', background: '#F8FAFC', padding: '10px', border: '1px solid #E2E8F0' }}>
-                  <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>Database</span>
-                  <span style={{ fontWeight: 800, color: '#0F172A' }}>MySQL 8.0</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #E2E8F0' }}>
-              <button
-                onClick={closeModal}
-                style={{
-                  borderRadius: '9999px',
-                  background: '#E51A24',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  fontSize: '12.5px',
-                  padding: '8px 24px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background 0.18s'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#C91822'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#E51A24'; }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* 2. FAQ PAGE / MODAL VIEW                                     */}
+      {/* FAQ PAGE / MODAL VIEW                                         */}
       {/* ============================================================ */}
       {isFaqOpen && (
         <div
