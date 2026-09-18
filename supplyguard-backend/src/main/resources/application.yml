@@ -60,9 +60,21 @@ ollama:
   timeout-seconds: 15
   fallback-enabled: true
 
+# Vapi AI Outbound Voice Call Configuration
+vapi:
+  api:
+    key: ${VAPI_API_KEY:a93b965c-24a5-4270-8294-16d1fb4e9453}
+  assistant:
+    id: ${VAPI_ASSISTANT_ID:bc490953-b036-4e7e-824d-2029a26013e9}
+  phone:
+    number:
+      id: ${VAPI_PHONE_NUMBER_ID:c8e6322c-c5b4-44b2-a887-289bddea37fa}
+  base-url: ${VAPI_BASE_URL:https://api.vapi.ai}
+
 # Logging
 logging:
   level:
     root: INFO
     com.supplyguard: DEBUG
     org.hibernate.SQL: WARN
+
