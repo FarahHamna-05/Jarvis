@@ -238,21 +238,21 @@ export default function ProductCatalog({
   return (
     <div className="space-y-4 text-slate-900">
       {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2D5AC] pb-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+          <h2 className="text-lg font-bold text-[#1E223D] flex items-center space-x-2">
             <Boxes className="h-5 w-5 text-[#E51A24]" />
             <span>Product Inventory Catalog</span>
-            <span className="text-xs font-semibold text-slate-500">({products.length} SKUs)</span>
+            <span className="text-xs font-semibold text-[#1E223D]/70">({products.length} SKUs)</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#1E223D]/75 mt-0.5">
             Monitored stock levels with rolling 7-day consumption, automated threshold triggers, and Vapi AI voice sourcing.
           </p>
         </div>
 
         <button
           onClick={onOpenAddProduct}
-          className="flex items-center space-x-1.5 rounded-full bg-[#E51A24] hover:bg-[#C91822] text-white font-bold px-4 py-2 text-xs shadow-sm transition self-start sm:self-auto"
+          className="flex items-center space-x-1.5 rounded-full bg-[#E51A24] hover:bg-[#C91822] text-white font-bold px-4 py-2 text-xs shadow-sm transition self-start sm:self-auto cursor-pointer"
         >
           <Plus className="h-4 w-4 stroke-[3]" />
           <span>Add New Product</span>
@@ -268,16 +268,16 @@ export default function ProductCatalog({
             placeholder="Search products by SKU name or specification..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 focus:outline-none"
+            className="w-full rounded-xl border border-[#E2D5AC] bg-white/95 pl-9 pr-4 py-2 text-xs text-[#1E223D] placeholder-slate-400 focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 focus:outline-none shadow-2xs"
           />
         </div>
 
-        <div className="flex items-center space-x-1 overflow-x-auto bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex items-center space-x-1 overflow-x-auto bg-white/80 p-1 rounded-xl border border-[#E2D5AC]">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`rounded-lg px-3 py-1 text-xs font-bold transition whitespace-nowrap ${
+              className={`rounded-lg px-3 py-1 text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-[#E51A24] text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -302,7 +302,7 @@ export default function ProductCatalog({
           return (
             <div
               key={product.id}
-              className="rounded-2xl border border-slate-200/80 bg-white p-5 flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md transition relative group"
+              className="rounded-2xl border border-[#E2D5AC] bg-white/95 p-5 flex flex-col justify-between space-y-4 shadow-2xs hover:shadow-md transition relative group"
             >
               <div>
                 {/* Image and Header */}

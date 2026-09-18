@@ -107,16 +107,16 @@ export default function SupplierHub({
   return (
     <div className="space-y-5 text-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2D5AC] pb-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2.5">
+          <h2 className="text-lg font-bold text-[#1E223D] flex items-center space-x-2.5">
             <Truck className="h-5 w-5 text-[#E51A24]" />
             <span>Supplier Network Directory</span>
-            <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[#1E223D] bg-white/90 border border-[#E2D5AC] px-2.5 py-0.5 rounded-full">
               {suppliers.length} vendors
             </span>
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-[#1E223D]/75 mt-1">
             Real-time supplier telemetry, lead times, dynamic reliability scores, and SendGrid live email dispatch.
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function SupplierHub({
           placeholder="Search suppliers by name, region, or contact email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 placeholder-slate-400 focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 focus:outline-none transition shadow-sm"
+          className="w-full rounded-xl border border-[#E2D5AC] bg-white/95 pl-10 pr-4 py-2.5 text-xs font-medium text-[#1E223D] placeholder-slate-400 focus:border-[#E51A24] focus:ring-2 focus:ring-red-100 focus:outline-none transition shadow-2xs"
         />
       </div>
 
@@ -151,8 +151,8 @@ export default function SupplierHub({
           return (
             <div
               key={supplier.id}
-              className={`rounded-2xl border bg-white transition-all p-5 flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md ${
-                isDisrupted ? 'border-red-300 bg-red-50/20' : 'border-slate-200/80 hover:border-slate-300'
+              className={`rounded-2xl border bg-white/95 transition-all p-5 flex flex-col justify-between space-y-4 shadow-2xs hover:shadow-md ${
+                isDisrupted ? 'border-red-300 bg-red-50/40' : 'border-[#E2D5AC] hover:border-slate-300'
               }`}
             >
               <div>

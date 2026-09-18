@@ -30,7 +30,8 @@ export default function Navbar({
   onRefresh,
   isRefreshing = false,
   criticalCount = 0,
-  onOpenOnboarding
+  onOpenOnboarding,
+  onGoToHome
 }) {
   const [isTeamOpen, setIsTeamOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
@@ -122,103 +123,212 @@ export default function Navbar({
 
   return (
     <>
-      {/* Top Vibrant Red Talentsy Banner */}
-      <header className="w-full bg-[#E51A24] text-white shadow-md sticky top-0 z-40">
-        <div className="max-w-[1780px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between">
-          
-          {/* Left Brand: White Square Badge + SupplyGuard */}
+      {/* Top Center Black Floating Glass Pill Navbar with NO GAP at the top (Flush to top, rounded bottom) */}
+      <header style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100000,
+        display: 'flex',
+        justifyContent: 'center',
+        padding: 0,
+        pointerEvents: 'none'
+      }}>
+        <nav style={{
+          pointerEvents: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          padding: '5px 14px 7px 14px',
+          borderRadius: '0 0 18px 18px',
+          background: 'rgba(0, 0, 0, 0.96)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderTop: 'none',
+          boxShadow: '0 10px 28px rgba(0, 0, 0, 0.35), 0 0 20px rgba(0, 80, 255, 0.12)',
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}>
+          {/* Left Brand Badge: BeforeStock Icon + Text */}
           <div
-            onClick={() => {
-              if (setActiveTab) setActiveTab('dashboard');
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '9px',
+              cursor: 'pointer'
             }}
-            className="flex items-center space-x-3 cursor-pointer group select-none pr-4 sm:pr-6 border-r border-white/20"
+            onClick={() => {
+              if (onGoToHome) onGoToHome();
+              else if (setActiveTab) setActiveTab('dashboard');
+            }}
           >
-            <div className="w-8 h-8 rounded-xl bg-white text-[#E51A24] flex items-center justify-center font-black shadow-sm transform group-hover:scale-105 transition-transform">
-              <svg
-                className="w-4 h-4 text-[#E51A24]"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
+            {/* Glossy Fire Engine Red & Root Beer App Icon */}
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              background: 'linear-gradient(180deg, #E63833 0%, #C92924 50%, #280B0B 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 2px 8px rgba(201, 41, 36, 0.45)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Gloss specular reflection */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '45%',
+                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 100%)',
+                borderTopLeftRadius: '8px',
+                borderTopRightRadius: '8px'
+              }} />
+              {/* Package / Inventory Graphic */}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                <path d="m3.3 7 8.7 5 8.7-5" />
+                <path d="M12 22V12" />
               </svg>
             </div>
-            <span className="font-extrabold text-white text-base sm:text-lg tracking-tight">
-              SupplyGuard
+
+            <span style={{
+              fontSize: '14.5px',
+              fontWeight: 800,
+              color: '#ffffff',
+              letterSpacing: '-0.02em',
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
+            }}>
+              BeforeStock
             </span>
           </div>
 
-          {/* Navigation Menu Links — Talentsy White Pill Active Tabs */}
-          <div className="hidden lg:flex items-center space-x-1.5 px-3">
-            {featureItems.map((f) => {
-              const isActive = activeTab === f.id;
-              const Icon = f.icon;
+          {/* Center Navigation Links (Matching Landing Page Styling) */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }} className="desktop-nav-pills">
+            {[
+              { id: 'dashboard', label: 'Dashboard' },
+              { id: 'products', label: 'Products' },
+              { id: 'suppliers', label: 'Suppliers' },
+              { id: 'simulator', label: 'Simulator' },
+              { id: 'inbox', label: 'Inbox' },
+              { id: 'graph', label: 'Graph' },
+              { id: 'audit', label: 'Audit' }
+            ].map((item) => {
+              const isActive = activeTab === item.id;
               return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => { if (setActiveTab) setActiveTab(f.id); }}
-                  className={`flex items-center space-x-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all duration-150 whitespace-nowrap ${
-                    isActive
-                      ? 'bg-white text-[#E51A24] shadow-md scale-100'
-                      : 'text-white/85 hover:text-white hover:bg-white/15'
-                  }`}
+                <span
+                  key={item.id}
+                  onClick={() => {
+                    if (setActiveTab) setActiveTab(item.id);
+                  }}
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.72)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                    padding: '3px 8px',
+                    borderRadius: '8px',
+                    background: isActive ? 'rgba(255, 255, 255, 0.14)' : 'transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.72)';
+                  }}
                 >
-                  <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#E51A24]' : 'text-white/80'}`} />
-                  <span>{f.label}</span>
-                </button>
+                  {item.label}
+                </span>
               );
             })}
           </div>
 
-          {/* Right Action: Critical Badge, Sync, User Profile Pill */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Right Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {criticalCount > 0 && (
-              <button
-                onClick={onRefresh}
-                className="hidden sm:flex items-center space-x-1.5 bg-white text-[#E51A24] font-black text-xs px-3.5 py-1.5 rounded-full shadow-sm hover:bg-white/95 transition"
+              <span
+                style={{
+                  background: '#E51A24',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title={`${criticalCount} Critical Inventory Risks`}
               >
-                <span className="h-2 w-2 rounded-full bg-[#E51A24] animate-ping" />
-                <span>{criticalCount} Critical</span>
-              </button>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ffffff' }} />
+                {criticalCount} Critical
+              </span>
             )}
 
+            {/* Sync Telemetry */}
             <button
               onClick={onRefresh}
               disabled={isRefreshing}
-              className="flex items-center space-x-1 bg-white/20 hover:bg-white/30 text-white font-bold text-xs px-3 py-1.5 rounded-full transition"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '9999px',
+                padding: '4px 8px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: 600
+              }}
               title="Sync Telemetry"
             >
               <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden md:inline">Sync</span>
             </button>
 
-            {onOpenOnboarding && (
-              <button
-                onClick={onOpenOnboarding}
-                className="hidden sm:flex items-center space-x-1.5 bg-white text-[#E51A24] hover:bg-white/90 font-extrabold text-xs px-3 py-1.5 rounded-full shadow-sm transition border border-white/40 cursor-pointer"
-                title="Launch 4-Step Sourcing Onboarding Flow"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-[#E51A24]" />
-                <span>KYB Onboarding</span>
-              </button>
-            )}
-
+            {/* Home Pill Button matching Landing Page style */}
             <button
-              onClick={() => { if (setActiveTab) setActiveTab('settings'); }}
-              className={`p-1.5 rounded-full transition cursor-pointer ${
-                activeTab === 'settings' ? 'bg-white text-[#E51A24] shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/15'
-              }`}
-              title="Settings & Profile"
+              onClick={() => {
+                if (onGoToHome) onGoToHome();
+              }}
+              style={{
+                background: '#ffffff',
+                color: '#000000',
+                border: 'none',
+                borderRadius: '9999px',
+                padding: '5px 16px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.04)';
+                e.currentTarget.style.background = '#f4f4f5';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.35)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.25)';
+              }}
             >
-              <Settings className="h-4 w-4" />
-            </button>
-
-            <button
-              onClick={() => setIsFaqOpen(true)}
-              className="p-1.5 text-white/80 hover:text-white hover:bg-white/15 rounded-full transition cursor-pointer"
-              title="FAQ & Guide"
-            >
-              <HelpCircle className="h-4 w-4" />
+              <span>Home</span>
             </button>
 
             {currentUser ? (
@@ -226,13 +336,24 @@ export default function Navbar({
                 <button
                   type="button"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 text-white font-bold text-xs px-3.5 py-1.5 rounded-full shadow-sm transition border border-white/25 cursor-pointer backdrop-blur-sm"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '9999px',
+                    padding: '3px 8px',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '11px',
+                    fontWeight: 600
+                  }}
                 >
-                  <div className="w-5 h-5 rounded-full bg-white text-[#E51A24] flex items-center justify-center text-[10px] font-black uppercase">
-                    {(currentUser.username || 'O')[0]}
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800 }}>
+                    {(currentUser.username || 'U')[0].toUpperCase()}
                   </div>
-                  <span className="max-w-[85px] truncate">{currentUser.username || 'Operator'}</span>
-                  <ChevronDown className="h-3 w-3 text-white/80" />
+                  <ChevronDown className="h-3 w-3 text-white/70" />
                 </button>
 
                 {isUserMenuOpen && (
@@ -342,27 +463,7 @@ export default function Navbar({
               </div>
             )}
           </div>
-
-        </div>
-
-        {/* Mobile Horizontal Navigation Scroll */}
-        <div className="lg:hidden flex items-center space-x-1.5 px-4 pb-2.5 overflow-x-auto border-t border-white/10 pt-2">
-          {featureItems.map((f) => {
-            const isActive = activeTab === f.id;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => { if (setActiveTab) setActiveTab(f.id); }}
-                className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap transition ${
-                  isActive ? 'bg-white text-[#E51A24] shadow' : 'text-white/85 hover:bg-white/15'
-                }`}
-              >
-                {f.label}
-              </button>
-            );
-          })}
-        </div>
+        </nav>
       </header>
 
       {/* ============================================================ */}

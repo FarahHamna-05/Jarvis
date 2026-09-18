@@ -487,7 +487,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-slate-900 flex flex-col items-center py-0 selection:bg-[#E51A24] selection:text-white bg-[#F4F6F9]">
+    <div className="min-h-screen text-slate-900 flex flex-col items-center py-0 selection:bg-[#E51A24] selection:text-white bg-black">
       {/* Top Vibrant Red Talentsy Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -577,7 +577,15 @@ export default function App() {
 
             {/* 2. Product Catalog View */}
             {activeTab === 'products' && (
-              <div className="rounded-2xl border border-slate-200/80 bg-white text-slate-900 p-6 lg:p-7 shadow-sm min-h-[700px]">
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
+                  border: '1.5px solid #E2D5AC',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+                  color: '#1E223D'
+                }}
+                className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
+              >
                 <ProductCatalog
                   products={products}
                   onOpenAddProduct={() => {
@@ -596,7 +604,15 @@ export default function App() {
 
             {/* 3. Supplier Hub View */}
             {activeTab === 'suppliers' && (
-              <div className="rounded-2xl border border-slate-200/80 bg-white text-slate-900 p-6 lg:p-7 shadow-sm min-h-[700px]">
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
+                  border: '1.5px solid #E2D5AC',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+                  color: '#1E223D'
+                }}
+                className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
+              >
                 <SupplierHub
                   suppliers={suppliers}
                   onToggleStatus={handleToggleSupplierStatus}
@@ -610,7 +626,15 @@ export default function App() {
 
             {/* 4. Chaos Sandbox View */}
             {activeTab === 'simulator' && (
-              <div className="rounded-2xl border border-slate-200/80 bg-white text-slate-900 p-6 lg:p-7 shadow-sm min-h-[700px]">
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
+                  border: '1.5px solid #E2D5AC',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+                  color: '#1E223D'
+                }}
+                className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
+              >
                 <DisruptionSimulator
                   suppliers={suppliers}
                   products={products}
@@ -623,7 +647,15 @@ export default function App() {
 
             {/* 5. Supplier Mailbox View */}
             {activeTab === 'inbox' && (
-              <div className="rounded-2xl border border-slate-200/80 bg-white text-slate-900 p-6 lg:p-7 shadow-sm min-h-[700px]">
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
+                  border: '1.5px solid #E2D5AC',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+                  color: '#1E223D'
+                }}
+                className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
+              >
                 <CommunicationsInbox
                   conversations={conversations}
                   onSendEmail={handleSendApprovedEmail}
@@ -635,7 +667,15 @@ export default function App() {
 
             {/* 6. Supply Chain Graph View */}
             {activeTab === 'graph' && (
-              <div className="rounded-2xl border border-slate-200/80 bg-white text-slate-900 p-6 lg:p-7 shadow-sm min-h-[700px]">
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
+                  border: '1.5px solid #E2D5AC',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+                  color: '#1E223D'
+                }}
+                className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
+              >
                 <SupplyChainGraph
                   products={products}
                   suppliers={suppliers}
@@ -646,7 +686,15 @@ export default function App() {
 
             {/* 7. Audit Trail & Logs View */}
             {activeTab === 'audit' && (
-              <div className="rounded-2xl border border-slate-200/80 bg-white text-slate-900 p-6 lg:p-7 shadow-sm min-h-[700px]">
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #FFFDD0 0%, #FAF5D8 45%, #F4ECC2 100%)',
+                  border: '1.5px solid #E2D5AC',
+                  boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 253, 208, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+                  color: '#1E223D'
+                }}
+                className="rounded-2xl p-6 lg:p-7 shadow-sm min-h-[700px]"
+              >
                 <AuditTrail auditLogs={auditLogs} />
               </div>
             )}

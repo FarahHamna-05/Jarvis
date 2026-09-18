@@ -40,9 +40,9 @@ export default function SupplyChainGraph({ products = [], suppliers = [], risks 
   return (
     <div className="space-y-5 text-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200/80 pb-5 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#E2D5AC] pb-5 gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 flex items-center space-x-2.5">
+          <h2 className="text-xl font-extrabold text-[#1E223D] flex items-center space-x-2.5">
             <span className="p-2 rounded-xl bg-red-50 text-[#E51A24] border border-red-200/60">
               <Network className="h-5 w-5" />
             </span>
