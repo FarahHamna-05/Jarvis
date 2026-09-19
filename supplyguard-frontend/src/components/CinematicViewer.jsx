@@ -7,7 +7,7 @@ const smootherstep = (edge0, edge1, x) => {
   return v * v * v * (v * (v * 6 - 15) + 10);
 };
 
-export default function CinematicViewer({ onOpenAuth, onNavigateTab, goToTeamTrigger, goToFrontTrigger, goToFaqTrigger }) {
+export default function CinematicViewer({ onOpenAuth, goToTeamTrigger, goToFrontTrigger, goToFaqTrigger }) {
   const getInitialProgress = () => {
     try {
       const p = new URLSearchParams(window.location.search).get('progress');
@@ -434,111 +434,6 @@ export default function CinematicViewer({ onOpenAuth, onNavigateTab, goToTeamTri
             }}>
               AI-driven stockout prediction, real-time demand forecasting, and automated supplier reordering. Catch inventory shortages before your customers do.
             </p>
-
-            {/* Front Container Interactive Action Buttons */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '14px',
-              marginTop: '28px',
-              flexWrap: 'wrap',
-              pointerEvents: 'auto'
-            }}>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onNavigateTab) onNavigateTab('dashboard');
-                  else if (onOpenAuth) onOpenAuth('login');
-                }}
-                style={{
-                  background: '#ffffff',
-                  color: '#280B0B',
-                  border: 'none',
-                  borderRadius: '9999px',
-                  padding: '11px 26px',
-                  fontSize: '14px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 24px rgba(40, 11, 11, 0.4), inset 0 1px 1px #ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(40, 11, 11, 0.55)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(40, 11, 11, 0.4)';
-                }}
-              >
-                <span>Launch Dashboard</span>
-                <span>→</span>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onNavigateTab) onNavigateTab('kyc');
-                }}
-                style={{
-                  background: 'rgba(40, 11, 11, 0.55)',
-                  color: '#F9E7C9',
-                  border: '1.5px solid rgba(249, 231, 201, 0.45)',
-                  borderRadius: '9999px',
-                  padding: '11px 24px',
-                  fontSize: '13.5px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(10px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'transform 0.18s ease, background 0.18s ease',
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.background = 'rgba(40, 11, 11, 0.75)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = 'rgba(40, 11, 11, 0.55)';
-                }}
-              >
-                <span>KYC Onboarding</span>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTargetProgress(1.0);
-                }}
-                style={{
-                  background: 'transparent',
-                  color: '#F9E7C9',
-                  border: 'none',
-                  padding: '11px 18px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  opacity: 0.9,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
-              >
-                <span>Explore 3D Deck</span>
-                <span>↓</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -720,78 +615,6 @@ export default function CinematicViewer({ onOpenAuth, onNavigateTab, goToTeamTri
               <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, lineHeight: 1.2, color: '#E4E4E4', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Supplier Reordering</h3>
               <span style={{ fontSize: '13px', opacity: 0.9, color: 'rgba(228, 228, 228, 0.8)' }}>99.8% Accuracy</span>
             </div>
-          </div>
-
-          {/* Stage 4 Floating Action Pills */}
-          <div style={{
-            marginTop: '26px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '14px',
-            pointerEvents: 'auto',
-            zIndex: 30
-          }}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onNavigateTab) onNavigateTab('team');
-              }}
-              style={{
-                background: 'rgba(20, 20, 24, 0.92)',
-                color: '#ffffff',
-                border: '1.5px solid rgba(255, 255, 255, 0.22)',
-                borderRadius: '9999px',
-                padding: '9px 22px',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                backdropFilter: 'blur(16px)',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.6)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease',
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.borderColor = '#C92924';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.22)';
-              }}
-            >
-              <span>Explore Team & Architecture →</span>
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setTargetProgress(2.0);
-              }}
-              style={{
-                background: '#C92924',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '9999px',
-                padding: '9px 20px',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 8px 24px rgba(201, 41, 36, 0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s ease',
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              <span>View Showcase & FAQ ↓</span>
-            </button>
           </div>
         </div>
       </div>
@@ -1276,72 +1099,11 @@ export default function CinematicViewer({ onOpenAuth, onNavigateTab, goToTeamTri
               }}>
                 06.
               </span>
-            </div>
-          </div>
-
-          {/* Stage 5 Bottom Action Row */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '14px',
-            marginTop: '16px',
-            pointerEvents: 'auto',
-            zIndex: 30
-          }}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onNavigateTab) onNavigateTab('faq');
-              }}
-              style={{
-                background: 'rgba(201, 41, 36, 0.95)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '9999px',
-                padding: '10px 24px',
-                fontSize: '13.5px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 8px 24px rgba(201, 41, 36, 0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease',
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              <span>Open Complete FAQ Knowledge Base</span>
-              <span>→</span>
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setTargetProgress(0);
-              }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#ffffff',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '9999px',
-                padding: '10px 20px',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
-            >
-              <span>Back to Top ↑</span>
-            </button>
           </div>
         </div>
       </div>
     </div>
+    </div>
   );
 }
+

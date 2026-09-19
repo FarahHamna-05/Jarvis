@@ -471,6 +471,13 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
           onGoToHome={handleGoToFront}
           onGoToTeam={handleGoToTeam}
           onGoToFaq={handleGoToFaq}
+          onGoToDashboard={() => {
+            if (!currentUser) {
+              setActiveTab('login');
+            } else {
+              setActiveTab('dashboard');
+            }
+          }}
           onLogout={handleLogout}
           onRefresh={handleRecalculateAll}
           isRefreshing={isRefreshing}
