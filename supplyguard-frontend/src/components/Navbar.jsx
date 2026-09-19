@@ -208,53 +208,57 @@ export default function Navbar({
             </span>
           </div>
 
-          {/* Center Navigation Links (Matching Landing Page Styling) */}
+          {/* Center Navigation Links: ONLY Our Team, FAQ Page, KYC & Categories, Dashboard */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px'
+            gap: '8px'
           }} className="desktop-nav-pills">
             {[
-              { id: 'home', label: 'Home' },
-              { id: 'dashboard', label: 'Dashboard' },
-              { id: 'products', label: 'Products' },
-              { id: 'suppliers', label: 'Suppliers' },
-              { id: 'simulator', label: 'Simulator' },
-              { id: 'inbox', label: 'Inbox' },
-              { id: 'graph', label: 'Graph' },
-              { id: 'audit', label: 'Audit' }
+              { id: 'team', label: 'Our Team', icon: Users },
+              { id: 'faq', label: 'FAQ Page', icon: HelpCircle },
+              { id: 'kyc', label: 'KYC & Categories', icon: ShieldCheck },
+              { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }
             ].map((item) => {
               const isActive = activeTab === item.id;
+              const Icon = item.icon;
               return (
-                <span
+                <button
                   key={item.id}
                   onClick={() => {
-                    if (item.id !== 'home' && !currentUser) {
+                    if (item.id === 'dashboard' && !currentUser) {
                       if (setActiveTab) setActiveTab('login');
                       return;
                     }
                     if (setActiveTab) setActiveTab(item.id);
                   }}
                   style={{
+                    background: isActive ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                    color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+                    border: isActive ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid transparent',
+                    borderRadius: '9999px',
+                    padding: '5px 14px',
                     fontSize: '13px',
-                    fontWeight: isActive ? 700 : 500,
-                    color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.72)',
+                    fontWeight: isActive ? 700 : 600,
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                    padding: '3px 8px',
-                    borderRadius: '8px',
-                    background: isActive ? 'rgba(255, 255, 255, 0.14)' : 'transparent'
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.18s ease',
+                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = '#ffffff';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.72)';
+                    e.currentTarget.style.color = isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.8)';
+                    e.currentTarget.style.background = isActive ? 'rgba(255, 255, 255, 0.16)' : 'transparent';
                   }}
                 >
-                  {item.label}
-                </span>
+                  <Icon size={14} className={isActive ? 'text-[#E51A24]' : 'text-slate-400'} />
+                  <span>{item.label}</span>
+                </button>
               );
             })}
           </div>

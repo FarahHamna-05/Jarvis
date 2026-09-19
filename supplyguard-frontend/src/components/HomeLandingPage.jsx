@@ -120,19 +120,27 @@ export default function HomeLandingPage({
             )}
 
             <button
-              onClick={() => onNavigateTab && onNavigateTab(currentUser ? 'products' : 'login')}
+              onClick={() => onNavigateTab && onNavigateTab('kyc')}
               className="flex items-center space-x-2 px-6 py-3.5 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white text-sm font-bold border border-white/30 backdrop-blur-md shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
-              <PhoneCall className="h-4 w-4 text-red-400" />
-              <span>AI Voice Sourcing</span>
+              <ShieldAlert className="h-4 w-4 text-emerald-400" />
+              <span>KYC Onboarding</span>
             </button>
 
             <button
-              onClick={() => onNavigateTab && onNavigateTab(currentUser ? 'simulator' : 'login')}
+              onClick={() => onNavigateTab && onNavigateTab('team')}
               className="flex items-center space-x-2 px-5 py-3.5 rounded-full bg-black/40 hover:bg-black/60 text-white text-sm font-semibold border border-white/20 backdrop-blur-md transition-all cursor-pointer"
             >
-              <Zap className="h-4 w-4 text-amber-300" />
-              <span>Chaos Sandbox</span>
+              <Users className="h-4 w-4 text-red-400" />
+              <span>Our Team</span>
+            </button>
+
+            <button
+              onClick={() => onNavigateTab && onNavigateTab('faq')}
+              className="flex items-center space-x-2 px-5 py-3.5 rounded-full bg-black/40 hover:bg-black/60 text-white text-sm font-semibold border border-white/20 backdrop-blur-md transition-all cursor-pointer"
+            >
+              <HelpCircle className="h-4 w-4 text-amber-400" />
+              <span>FAQ Page</span>
             </button>
           </div>
 

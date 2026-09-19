@@ -15,6 +15,9 @@ import ProductModal from './components/ProductModal';
 import SupplierModal from './components/SupplierModal';
 import BentoHomeDashboard from './components/BentoHomeDashboard';
 import HomeLandingPage from './components/HomeLandingPage';
+import OurTeamPage from './components/OurTeamPage';
+import FAQPage from './components/FAQPage';
+import KYCPage from './components/KYCPage';
 import OnboardingFlow from './components/OnboardingFlow';
 import SettingsProfile from './components/SettingsProfile';
 import LoginPage from './components/LoginPage';
@@ -458,7 +461,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {activeTab === 'home' && (
               <HomeLandingPage
                 onNavigateTab={(tab) => {
-                  if (tab !== 'home' && !currentUser) {
+                  if (tab === 'dashboard' && !currentUser) {
                     setActiveTab('login');
                     showToast({
                       title: 'Sign In Required',
@@ -473,6 +476,50 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
                 criticalCount={summary?.criticalRisks || 0}
                 productsCount={products?.length || 0}
                 suppliersCount={suppliers?.length || 0}
+              />
+            )}
+
+            {/* 0.1 Dedicated Our Team Page View */}
+            {activeTab === 'team' && (
+              <OurTeamPage
+                onNavigateTab={(tab) => {
+                  if (tab === 'dashboard' && !currentUser) {
+                    setActiveTab('login');
+                    return;
+                  }
+                  setActiveTab(tab);
+                }}
+              />
+            )}
+
+            {/* 0.2 Dedicated FAQ Page View */}
+            {activeTab === 'faq' && (
+              <FAQPage
+                onNavigateTab={(tab) => {
+                  if (tab === 'dashboard' && !currentUser) {
+                    setActiveTab('login');
+                    return;
+                  }
+                  setActiveTab(tab);
+                }}
+              />
+            )}
+
+            {/* 0.3 Dedicated KYC & Categories Onboarding View */}
+            {(activeTab === 'kyc' || activeTab === 'category' || activeTab === 'categories') && (
+              <KYCPage
+                onComplete={() => {
+                  if (currentUser) {
+                    const updated = { ...currentUser, onboardingCompleted: true };
+                    setCurrentUser(updated);
+                    localStorage.setItem('supplyguard_user', JSON.stringify(updated));
+                  }
+                  fetchAllData();
+                }}
+                onNavigateDashboard={() => {
+                  setActiveTab(currentUser ? 'dashboard' : 'login');
+                }}
+                showToast={showToast}
               />
             )}
             
