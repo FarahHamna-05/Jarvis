@@ -1,8 +1,12 @@
 import { Client } from '@stomp/stompjs';
 
 export const createWebSocketClient = (onRiskUpdate) => {
+  const defaultWsUrl = typeof window !== 'undefined'
+    ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:8085/ws`
+    : 'ws://localhost:8085/ws';
+
   const client = new Client({
-    brokerURL: 'ws://localhost:8085/ws',
+    brokerURL: import.meta.env.VITE_WS_URL || defaultWsUrl,
     reconnectDelay: 5000,
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
