@@ -36,9 +36,12 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
   const [activeTab, setActiveTabState] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      return params.get('tab') || 'dashboard';
+      const tabParam = params.get('tab');
+      if (tabParam) return tabParam;
+      const saved = localStorage.getItem('supplyguard_user');
+      return saved ? 'dashboard' : 'home';
     } catch (e) {
-      return 'dashboard';
+      return 'home';
     }
   });
 
@@ -70,9 +73,27 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
   const [filterSeverity, setFilterSeverity] = useState('ALL');
 
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('supplyguard_user');
-    return saved ? JSON.parse(saved) : { username: 'dhanush', role: 'ROLE_USER' };
+    try {
+      const saved = localStorage.getItem('supplyguard_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
   });
+
+  // Authentication route protection: only authenticated users can access operational dashboard tabs
+  useEffect(() => {
+    const protectedTabs = ['dashboard', 'products', 'suppliers', 'simulator', 'inbox', 'graph', 'audit', 'settings'];
+    if (!currentUser && protectedTabs.includes(activeTab)) {
+      setActiveTabState('login');
+      showToast({
+        title: 'Sign In Required',
+        description: 'Please sign in or create an account to access your personal dashboard.',
+        type: 'warning',
+        duration: 4000
+      });
+    }
+  }, [currentUser, activeTab]);
 
   const [activeMitigationEvent, setActiveMitigationEvent] = useState(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -103,14 +124,15 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
     }
   }, [products]);
 
-  // Load all telemetry
+  // Load all telemetry (scoped to authenticated user)
   const fetchAllData = useCallback(async () => {
     setIsRefreshing(true);
     try {
+      const params = currentUser?.id ? { userId: currentUser.id } : {};
       const [summaryRes, risksRes, productsRes, suppliersRes, convosRes, auditRes] = await Promise.all([
-        apiClient.get('/risks/dashboard-summary').catch(() => ({ data: MOCK_SUMMARY })),
-        apiClient.get('/risks').catch(() => ({ data: MOCK_RISKS })),
-        apiClient.get('/products').catch(() => ({ data: MOCK_PRODUCTS })),
+        apiClient.get('/risks/dashboard-summary', { params }).catch(() => ({ data: MOCK_SUMMARY })),
+        apiClient.get('/risks', { params }).catch(() => ({ data: MOCK_RISKS })),
+        apiClient.get('/products', { params }).catch(() => ({ data: MOCK_PRODUCTS })),
         apiClient.get('/suppliers').catch(() => ({ data: MOCK_SUPPLIERS })),
         apiClient.get('/communications').catch(() => ({ data: MOCK_CONVERSATIONS })),
         apiClient.get('/approvals/audit-logs').catch(() => ({ data: MOCK_AUDIT_LOGS })),
@@ -127,7 +149,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     fetchAllData();
@@ -223,13 +245,19 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
   // Human-in-the-loop Approval / Rejection
   const handleApproveMitigation = async (payload) => {
     try {
+      const operatorIdentity = currentUser?.fullName
+        ? `${currentUser.fullName} (${currentUser.username})`
+        : (currentUser?.username || 'Operator');
       await apiClient.post('/approvals/action', payload, {
-        params: { approvedBy: currentUser?.username || 'Operator' }
+        params: {
+          approvedBy: operatorIdentity,
+          userId: currentUser?.id
+        }
       });
       await fetchAllData();
       showToast({
         title: payload.approved ? 'Mitigation Authorized & Executed' : 'Mitigation Plan Rejected',
-        description: payload.notes || (payload.approved ? 'Alternate supplier allocation sealed in audit log.' : 'Dismissed by operator.'),
+        description: payload.notes || (payload.approved ? `Authorized by ${operatorIdentity} and sealed in audit log.` : 'Dismissed by operator.'),
         type: payload.approved ? 'success' : 'info'
       });
     } catch (err) {
@@ -237,13 +265,17 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
     }
   };
 
-  // Product Save / Edit
+  // Product Save / Edit (scoped to user)
   const handleSaveProduct = async (payload) => {
     try {
+      const productPayload = {
+        ...payload,
+        userId: currentUser?.id || undefined
+      };
       if (editingProduct) {
-        await apiClient.put(`/products/${editingProduct.id}`, payload);
+        await apiClient.put(`/products/${editingProduct.id}`, productPayload);
       } else {
-        await apiClient.post('/products', payload);
+        await apiClient.post('/products', productPayload);
       }
       setEditingProduct(null);
       await fetchAllData();
@@ -377,11 +409,11 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
     setCurrentUser(null);
     showToast({
       title: 'Signed Out Successfully',
-      description: 'You have been safely signed out. Please sign in or create an account.',
+      description: 'Your dashboard session has been securely terminated.',
       type: 'info',
       duration: 4000
     });
-    setActiveTab('login');
+    setActiveTab('home');
   };
 
   return (
@@ -425,7 +457,19 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {/* 0. Dedicated Home Landing Page View */}
             {activeTab === 'home' && (
               <HomeLandingPage
-                onNavigateTab={(tab) => setActiveTab(tab)}
+                onNavigateTab={(tab) => {
+                  if (tab !== 'home' && !currentUser) {
+                    setActiveTab('login');
+                    showToast({
+                      title: 'Sign In Required',
+                      description: 'Please sign in or register to enter your private dashboard.',
+                      type: 'info'
+                    });
+                    return;
+                  }
+                  setActiveTab(tab);
+                }}
+                currentUser={currentUser}
                 criticalCount={summary?.criticalRisks || 0}
                 productsCount={products?.length || 0}
                 suppliersCount={suppliers?.length || 0}
@@ -641,18 +685,19 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
             {(activeTab === 'login' || activeTab === 'signup') && (
               <LoginPage
                 defaultMode={activeTab === 'signup' ? 'signup' : 'login'}
-                onBackToHome={() => setActiveTab('dashboard')}
+                onBackToHome={() => setActiveTab(currentUser ? 'dashboard' : 'home')}
                 onLoginSuccess={(user) => {
-                  const loggedInUser = user || {
-                    username: 'admin',
-                    fullName: 'Store Admin',
-                    email: 'admin@beforestock.ai',
-                    role: 'ROLE_ADMIN',
-                    onboardingCompleted: true
-                  };
-                  setCurrentUser(loggedInUser);
-                  localStorage.setItem('supplyguard_user', JSON.stringify(loggedInUser));
-                  setActiveTab('dashboard');
+                  if (user) {
+                    setCurrentUser(user);
+                    localStorage.setItem('supplyguard_user', JSON.stringify(user));
+                    setActiveTab('dashboard');
+                    showToast({
+                      title: `Welcome, ${user.fullName || user.username}!`,
+                      description: `Entered your private dashboard (${user.companyName || 'Enterprise Workspace'}).`,
+                      type: 'success',
+                      duration: 4500
+                    });
+                  }
                 }}
                 onSubmitSuccess={(msg) => {
                   showToast({

@@ -19,6 +19,8 @@ public class Product {
     @Id
     private String id;
 
+    private Long userId; // Owning user ID for isolated multi-user dashboards
+
     private String name;
     private String category;
     private String description;

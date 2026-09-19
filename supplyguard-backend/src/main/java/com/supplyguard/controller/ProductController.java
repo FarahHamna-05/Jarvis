@@ -18,8 +18,8 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<ProductDto.Response>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<List<ProductDto.Response>> getAllProducts(@RequestParam(required = false) Long userId) {
+        return ResponseEntity.ok(productService.getAllProducts(userId));
     }
 
     @GetMapping("/{id}")

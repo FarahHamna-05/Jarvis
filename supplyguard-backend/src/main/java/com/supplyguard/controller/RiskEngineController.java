@@ -1,5 +1,6 @@
 package com.supplyguard.controller;
 
+import com.supplyguard.document.Product;
 import com.supplyguard.dto.RiskDto;
 import com.supplyguard.entity.RiskEvent;
 import com.supplyguard.repository.jpa.RiskEventRepository;
@@ -10,7 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -25,8 +28,18 @@ public class RiskEngineController {
     private final SupplierRepository supplierRepository;
 
     @GetMapping
-    public ResponseEntity<List<RiskDto.EventResponse>> getAllRiskEvents() {
+    public ResponseEntity<List<RiskDto.EventResponse>> getAllRiskEvents(@RequestParam(required = false) Long userId) {
         List<RiskEvent> events = riskEventRepository.findAllByOrderByCreatedAtDesc();
+        if (userId != null) {
+            Set<String> userProductIds = productRepository.findByUserId(userId).stream()
+                    .map(Product::getId)
+                    .collect(Collectors.toSet());
+            if (!userProductIds.isEmpty()) {
+                events = events.stream()
+                        .filter(e -> e.getProductId() == null || userProductIds.contains(e.getProductId()))
+                        .collect(Collectors.toList());
+            }
+        }
         return ResponseEntity.ok(events.stream().map(this::mapToDto).collect(Collectors.toList()));
     }
 
@@ -37,12 +50,26 @@ public class RiskEngineController {
     }
 
     @GetMapping("/dashboard-summary")
-    public ResponseEntity<RiskDto.DashboardSummary> getDashboardSummary() {
-        long totalProducts = productRepository.count();
+    public ResponseEntity<RiskDto.DashboardSummary> getDashboardSummary(@RequestParam(required = false) Long userId) {
+        long totalProducts;
+        Set<String> userProductIds = Collections.emptySet();
+        if (userId != null) {
+            List<Product> userProducts = productRepository.findByUserId(userId);
+            totalProducts = userProducts.size();
+            userProductIds = userProducts.stream().map(Product::getId).collect(Collectors.toSet());
+        } else {
+            totalProducts = productRepository.count();
+        }
         long totalSuppliers = supplierRepository.count();
         long disruptedSuppliers = supplierRepository.findByStatus("DISRUPTED").size();
 
         List<RiskEvent> openRisks = riskEventRepository.findByStatusOrderByCreatedAtDesc("OPEN");
+        if (userId != null && !userProductIds.isEmpty()) {
+            final Set<String> fUserProdIds = userProductIds;
+            openRisks = openRisks.stream()
+                    .filter(r -> r.getProductId() == null || fUserProdIds.contains(r.getProductId()))
+                    .collect(Collectors.toList());
+        }
         long critical = openRisks.stream().filter(r -> "CRITICAL".equalsIgnoreCase(r.getSeverity())).count();
         long high = openRisks.stream().filter(r -> "HIGH".equalsIgnoreCase(r.getSeverity())).count();
         long medium = openRisks.stream().filter(r -> "MEDIUM".equalsIgnoreCase(r.getSeverity())).count();

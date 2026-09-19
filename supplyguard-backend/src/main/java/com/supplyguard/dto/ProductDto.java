@@ -31,6 +31,7 @@ public class ProductDto {
         private List<Long> alternateSupplierIds;
         private Double marketPriceReference;
         private String demandTrend;
+        private Long userId;
     }
 
     @Getter
@@ -40,6 +41,7 @@ public class ProductDto {
     @Builder
     public static class Response {
         private String id;
+        private Long userId;
         private String name;
         private String category;
         private String description;

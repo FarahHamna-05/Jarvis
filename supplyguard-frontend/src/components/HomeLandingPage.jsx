@@ -21,6 +21,7 @@ import {
 
 export default function HomeLandingPage({
   onNavigateTab,
+  currentUser,
   criticalCount = 0,
   productsCount = 0,
   suppliersCount = 0
@@ -89,17 +90,37 @@ export default function HomeLandingPage({
 
           {/* Action CTAs */}
           <div className="relative z-10 flex flex-wrap items-center justify-center gap-3.5 mt-8 sm:mt-10">
-            <button
-              onClick={() => onNavigateTab && onNavigateTab('dashboard')}
-              className="flex items-center space-x-2 px-7 py-3.5 rounded-full bg-white hover:bg-slate-100 text-slate-950 text-sm font-extrabold shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            >
-              <LayoutDashboard className="h-4 w-4 text-[#E51A24]" />
-              <span>Open Bento Dashboard</span>
-              <ArrowRight className="h-4 w-4 text-slate-400 ml-1" />
-            </button>
+            {currentUser ? (
+              <button
+                onClick={() => onNavigateTab && onNavigateTab('dashboard')}
+                className="flex items-center space-x-2 px-7 py-3.5 rounded-full bg-white hover:bg-slate-100 text-slate-950 text-sm font-extrabold shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                <LayoutDashboard className="h-4 w-4 text-[#E51A24]" />
+                <span>Open Your Dashboard ({currentUser.username})</span>
+                <ArrowRight className="h-4 w-4 text-slate-400 ml-1" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onNavigateTab && onNavigateTab('login')}
+                  className="flex items-center space-x-2 px-7 py-3.5 rounded-full bg-white hover:bg-slate-100 text-slate-950 text-sm font-extrabold shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <LayoutDashboard className="h-4 w-4 text-[#E51A24]" />
+                  <span>Sign In to Your Dashboard</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 ml-1" />
+                </button>
+                <button
+                  onClick={() => onNavigateTab && onNavigateTab('signup')}
+                  className="flex items-center space-x-2 px-6 py-3.5 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white text-sm font-bold border border-white/30 backdrop-blur-md shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Sparkles className="h-4 w-4 text-[#E51A24]" />
+                  <span>Create Account</span>
+                </button>
+              </>
+            )}
 
             <button
-              onClick={() => onNavigateTab && onNavigateTab('products')}
+              onClick={() => onNavigateTab && onNavigateTab(currentUser ? 'products' : 'login')}
               className="flex items-center space-x-2 px-6 py-3.5 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white text-sm font-bold border border-white/30 backdrop-blur-md shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <PhoneCall className="h-4 w-4 text-red-400" />
@@ -107,7 +128,7 @@ export default function HomeLandingPage({
             </button>
 
             <button
-              onClick={() => onNavigateTab && onNavigateTab('simulator')}
+              onClick={() => onNavigateTab && onNavigateTab(currentUser ? 'simulator' : 'login')}
               className="flex items-center space-x-2 px-5 py-3.5 rounded-full bg-black/40 hover:bg-black/60 text-white text-sm font-semibold border border-white/20 backdrop-blur-md transition-all cursor-pointer"
             >
               <Zap className="h-4 w-4 text-amber-300" />

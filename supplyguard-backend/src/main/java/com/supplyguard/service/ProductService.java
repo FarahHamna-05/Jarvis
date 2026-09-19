@@ -28,9 +28,57 @@ public class ProductService {
     private final RiskEngineService riskEngineService;
 
     public List<ProductDto.Response> getAllProducts() {
-        return productRepository.findAll().stream()
+        return getAllProducts(null);
+    }
+
+    public List<ProductDto.Response> getAllProducts(Long userId) {
+        List<Product> products;
+        if (userId != null) {
+            products = productRepository.findByUserId(userId);
+            if (products.isEmpty()) {
+                products = seedStarterProductsForUser(userId);
+            }
+        } else {
+            products = productRepository.findAll();
+        }
+        return products.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private List<Product> seedStarterProductsForUser(Long userId) {
+        List<Product> templates = productRepository.findByUserId(null);
+        if (templates.isEmpty()) {
+            templates = productRepository.findAll();
+        }
+        if (templates.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Product> userProducts = new ArrayList<>();
+        for (Product base : templates) {
+            Product clone = Product.builder()
+                    .userId(userId)
+                    .name(base.getName())
+                    .category(base.getCategory())
+                    .description(base.getDescription())
+                    .imageBase64(base.getImageBase64())
+                    .launchDate(base.getLaunchDate())
+                    .currentStock(base.getCurrentStock())
+                    .recentUsage(base.getRecentUsage() != null ? new ArrayList<>(base.getRecentUsage()) : Arrays.asList(10, 12, 11, 14, 13, 15, 12))
+                    .reorderThreshold(base.getReorderThreshold())
+                    .primarySupplierId(base.getPrimarySupplierId())
+                    .alternateSupplierIds(base.getAlternateSupplierIds() != null ? new ArrayList<>(base.getAlternateSupplierIds()) : new ArrayList<>())
+                    .marketPriceReference(base.getMarketPriceReference())
+                    .demandTrend(base.getDemandTrend())
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            Product saved = productRepository.save(clone);
+            syncProductSuppliers(saved);
+            riskEngineService.evaluateProductRisk(saved);
+            userProducts.add(saved);
+        }
+        return userProducts;
     }
 
     public Optional<ProductDto.Response> getProductById(String id) {
@@ -40,6 +88,7 @@ public class ProductService {
     @Transactional
     public ProductDto.Response createProduct(ProductDto.Request request) {
         Product product = Product.builder()
+                .userId(request.getUserId())
                 .name(request.getName())
                 .category(request.getCategory())
                 .description(request.getDescription())
@@ -161,6 +210,7 @@ public class ProductService {
 
         return ProductDto.Response.builder()
                 .id(product.getId())
+                .userId(product.getUserId())
                 .name(product.getName())
                 .category(product.getCategory())
                 .description(product.getDescription())

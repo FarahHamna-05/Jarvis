@@ -229,6 +229,10 @@ export default function Navbar({
                 <span
                   key={item.id}
                   onClick={() => {
+                    if (item.id !== 'home' && !currentUser) {
+                      if (setActiveTab) setActiveTab('login');
+                      return;
+                    }
                     if (setActiveTab) setActiveTab(item.id);
                   }}
                   style={{

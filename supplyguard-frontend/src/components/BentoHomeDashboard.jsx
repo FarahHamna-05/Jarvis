@@ -323,10 +323,17 @@ export default function BentoHomeDashboard({
                 >
                   <span>Buffer: <strong className="text-white">1.20x</strong></span>
                   <span className="text-white/30">|</span>
-                  <span className="text-white font-bold">{currentUser?.username || 'admin'}</span>
+                  <span className="text-white font-bold" title={currentUser?.email || currentUser?.companyName}>
+                    {currentUser?.fullName || currentUser?.username || 'Operator'}
+                  </span>
+                  {currentUser?.companyName && (
+                    <span className="hidden sm:inline-block text-[10px] text-amber-200/90 font-sans font-semibold px-2 py-0.5 rounded-full bg-white/10">
+                      {currentUser.companyName}
+                    </span>
+                  )}
                   {currentUser && (
-                    <button onClick={onLogout} title="Sign Out" className="text-[10px] text-white/70 hover:underline ml-1 cursor-pointer">
-                      (out)
+                    <button onClick={onLogout} title="Sign Out of Dashboard" className="text-[10px] text-rose-300 hover:text-rose-100 hover:underline ml-1 cursor-pointer font-sans font-bold">
+                      Sign Out
                     </button>
                   )}
                 </div>
