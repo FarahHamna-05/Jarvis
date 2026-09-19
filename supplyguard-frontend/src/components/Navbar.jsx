@@ -32,6 +32,7 @@ export default function Navbar({
   criticalCount = 0,
   onOpenOnboarding,
   onGoToHome
+}) {
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -155,8 +156,8 @@ export default function Navbar({
               cursor: 'pointer'
             }}
             onClick={() => {
+              if (setActiveTab) setActiveTab('home');
               if (onGoToHome) onGoToHome();
-              else if (setActiveTab) setActiveTab('dashboard');
             }}
           >
             {/* Glossy Fire Engine Red & Root Beer App Icon */}
@@ -183,20 +184,25 @@ export default function Navbar({
                 borderTopLeftRadius: '8px',
                 borderTopRightRadius: '8px'
               }} />
-              {/* Package / Inventory Graphic */}
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                <path d="m3.3 7 8.7 5 8.7-5" />
-                <path d="M12 22V12" />
-              </svg>
+
+              {/* Glowing core symbol */}
+              <div style={{
+                width: '12px',
+                height: '12px',
+                background: '#ffffff',
+                borderRadius: '3px',
+                transform: 'rotate(45deg)',
+                boxShadow: '0 0 6px rgba(255, 255, 255, 0.95)'
+              }} />
             </div>
 
+            {/* Brand Title: Bold White Pro Typography */}
             <span style={{
-              fontSize: '14.5px',
+              fontSize: '15px',
               fontWeight: 800,
-              color: '#ffffff',
               letterSpacing: '-0.02em',
-              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
+              color: '#ffffff',
+              fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
             }}>
               BeforeStock
             </span>
@@ -209,6 +215,7 @@ export default function Navbar({
             gap: '12px'
           }} className="desktop-nav-pills">
             {[
+              { id: 'home', label: 'Home' },
               { id: 'dashboard', label: 'Dashboard' },
               { id: 'products', label: 'Products' },
               { id: 'suppliers', label: 'Suppliers' },
@@ -295,18 +302,19 @@ export default function Navbar({
             {/* Home Pill Button matching Landing Page style */}
             <button
               onClick={() => {
+                if (setActiveTab) setActiveTab('home');
                 if (onGoToHome) onGoToHome();
               }}
               style={{
-                background: '#ffffff',
-                color: '#000000',
-                border: 'none',
+                background: activeTab === 'home' ? '#E51A24' : '#ffffff',
+                color: activeTab === 'home' ? '#ffffff' : '#000000',
+                border: activeTab === 'home' ? '1px solid rgba(255, 255, 255, 0.4)' : 'none',
                 borderRadius: '9999px',
                 padding: '5px 16px',
                 fontSize: '13px',
                 fontWeight: 700,
                 cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+                boxShadow: activeTab === 'home' ? '0 4px 16px rgba(229, 26, 36, 0.5)' : '0 4px 14px rgba(0, 0, 0, 0.25)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -315,13 +323,17 @@ export default function Navbar({
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.04)';
-                e.currentTarget.style.background = '#f4f4f5';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.35)';
+                if (activeTab !== 'home') {
+                  e.currentTarget.style.background = '#f4f4f5';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.35)';
+                }
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = '#ffffff';
-                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.25)';
+                if (activeTab !== 'home') {
+                  e.currentTarget.style.background = '#ffffff';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.25)';
+                }
               }}
             >
               <span>Home</span>

@@ -14,6 +14,7 @@ import MitigationModal from './components/MitigationModal';
 import ProductModal from './components/ProductModal';
 import SupplierModal from './components/SupplierModal';
 import BentoHomeDashboard from './components/BentoHomeDashboard';
+import HomeLandingPage from './components/HomeLandingPage';
 import OnboardingFlow from './components/OnboardingFlow';
 import SettingsProfile from './components/SettingsProfile';
 import LoginPage from './components/LoginPage';
@@ -81,7 +82,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
   const [authModalMode, setAuthModalMode] = useState('login');
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showDetailedFeed, setShowDetailedFeed] = useState(false);
+  const [showDetailedFeed, setShowDetailedFeed] = useState(true);
   const [selectedVoiceProduct, setSelectedVoiceProduct] = useState(null);
 
   const handleOpenVoiceSourcing = useCallback((productOrRisk, autoConnect = false) => {
@@ -405,7 +406,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
         onOpenAuth={(mode) => {
           setActiveTab(mode || 'login');
         }}
-        onGoToHome={onGoToHome}
+        onGoToHome={onGoToHome || (() => setActiveTab('home'))}
         onLogout={handleLogout}
         onRefresh={handleRecalculateAll}
         isRefreshing={isRefreshing}
@@ -420,6 +421,16 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
           {/* Main Content Area */}
           <main className="flex-1 min-w-0">
             <ErrorBoundary onReset={() => setActiveTab('dashboard')}>
+
+            {/* 0. Dedicated Home Landing Page View */}
+            {activeTab === 'home' && (
+              <HomeLandingPage
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                criticalCount={summary?.criticalRisks || 0}
+                productsCount={products?.length || 0}
+                suppliersCount={suppliers?.length || 0}
+              />
+            )}
             
             {/* 1. Dashboard View */}
             {activeTab === 'dashboard' && (
