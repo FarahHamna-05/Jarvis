@@ -434,20 +434,22 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
       className="text-slate-100 flex flex-col items-center py-0 selection:bg-[#E51A24] selection:text-white"
     >
       {/* Top Center Flush-to-Top Black Glass Navbar (Matching Landing Page) */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        currentUser={currentUser}
-        onOpenAuth={(mode) => {
-          setActiveTab(mode || 'login');
-        }}
-        onGoToHome={onGoToHome || (() => setActiveTab('home'))}
-        onLogout={handleLogout}
-        onRefresh={handleRecalculateAll}
-        isRefreshing={isRefreshing}
-        criticalCount={summary?.criticalRisks || 0}
-        onOpenOnboarding={() => setIsOnboardingOpen(true)}
-      />
+      <ErrorBoundary onReset={() => setActiveTab('home')}>
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          currentUser={currentUser}
+          onOpenAuth={(mode) => {
+            setActiveTab(mode || 'login');
+          }}
+          onGoToHome={onGoToHome || (() => setActiveTab('home'))}
+          onLogout={handleLogout}
+          onRefresh={handleRecalculateAll}
+          isRefreshing={isRefreshing}
+          criticalCount={summary?.criticalRisks || 0}
+          onOpenOnboarding={() => setIsOnboardingOpen(true)}
+        />
+      </ErrorBoundary>
 
       {/* Main Page Content Wrapper (Padded for flush floating navbar) */}
       <div className="w-full max-w-[1780px] px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-10 relative">

@@ -11,6 +11,7 @@ import {
   Check,
   HelpCircle,
   Users,
+  ShieldCheck,
   CreditCard,
   LogOut,
   ChevronDown,
