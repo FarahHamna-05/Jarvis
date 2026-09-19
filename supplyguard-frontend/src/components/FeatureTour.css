@@ -1,0 +1,190 @@
+/* FeatureTour Component & Upload Card Styles */
+
+.feature-tour-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.feature-tour-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  min-height: 540px;
+  border-radius: 34px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.feature-tour-close-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  padding: 8px;
+  border-radius: 9999px;
+  background-color: #cbd5e1;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.feature-tour-close-btn:hover {
+  background-color: #94a3b8;
+  transform: scale(1.05);
+}
+
+.feature-tour-close-btn:active {
+  transform: scale(0.95);
+}
+
+.feature-tour-body {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.feature-tour-icon-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.feature-tour-icon-bg {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 28px;
+  background-color: #f1f5f9;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.feature-tour-icon {
+  position: relative;
+  color: #334155;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.12));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-tour-content {
+  text-align: center;
+  padding: 0 16px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.feature-tour-title {
+  font-size: 26px;
+  font-weight: 750;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.feature-tour-description {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #64748b;
+  max-width: 340px;
+}
+
+.feature-tour-btn {
+  margin-top: 28px;
+  padding: 12px 32px;
+  border-radius: 9999px;
+  font-weight: 650;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  background-color: #f1f5f9;
+  color: #1e293b;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feature-tour-btn:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.feature-tour-btn-primary {
+  background-color: #ff6200 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(255, 98, 0, 0.35);
+}
+
+.feature-tour-btn-primary:hover {
+  background-color: #ea580c !important;
+  box-shadow: 0 6px 20px rgba(255, 98, 0, 0.45);
+}
+
+.feature-tour-dots {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feature-tour-dot-btn {
+  position: relative;
+  height: 12px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-tour-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.feature-tour-dot.active {
+  background-color: #64748b;
+}
+
+.feature-tour-dot.inactive {
+  background-color: #e2e8f0;
+}
+
+.feature-tour-dot.completed {
+  background-color: #ff6200;
+}
+
+.feature-tour-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 40px;
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), transparent 50%, rgba(0, 0, 0, 0.05));
+}

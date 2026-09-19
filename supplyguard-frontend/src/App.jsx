@@ -15,6 +15,7 @@ import ProductModal from './components/ProductModal';
 import SupplierModal from './components/SupplierModal';
 import BentoHomeDashboard from './components/BentoHomeDashboard';
 import HomeLandingPage from './components/HomeLandingPage';
+import CinematicViewer from './components/CinematicViewer';
 import OurTeamPage from './components/OurTeamPage';
 import FAQPage from './components/FAQPage';
 import KYCPage from './components/KYCPage';
@@ -97,6 +98,31 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
       });
     }
   }, [currentUser, activeTab]);
+
+  const [goToFrontTrigger, setGoToFrontTrigger] = useState(0);
+  const [goToTeamTrigger, setGoToTeamTrigger] = useState(0);
+  const [goToFaqTrigger, setGoToFaqTrigger] = useState(0);
+
+  const handleGoToFront = () => {
+    if (activeTab !== 'home') setActiveTab('home');
+    setGoToFrontTrigger((prev) => prev + 1);
+  };
+
+  const handleGoToTeam = () => {
+    if (activeTab === 'home') {
+      setGoToTeamTrigger((prev) => prev + 1);
+    } else {
+      setActiveTab('team');
+    }
+  };
+
+  const handleGoToFaq = () => {
+    if (activeTab === 'home') {
+      setGoToFaqTrigger((prev) => prev + 1);
+    } else {
+      setActiveTab('faq');
+    }
+  };
 
   const [activeMitigationEvent, setActiveMitigationEvent] = useState(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -442,7 +468,9 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
           onOpenAuth={(mode) => {
             setActiveTab(mode || 'login');
           }}
-          onGoToHome={onGoToHome || (() => setActiveTab('home'))}
+          onGoToHome={handleGoToFront}
+          onGoToTeam={handleGoToTeam}
+          onGoToFaq={handleGoToFaq}
           onLogout={handleLogout}
           onRefresh={handleRecalculateAll}
           isRefreshing={isRefreshing}
@@ -451,35 +479,29 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
         />
       </ErrorBoundary>
 
-      {/* Main Page Content Wrapper (Padded for flush floating navbar) */}
-      <div className="w-full max-w-[1780px] px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-10 relative">
-        <div className="flex flex-col lg:flex-row gap-6 relative z-10">
+      {/* 0. 3D Cinematic Transformation Landing Page View (Exact match to hackthon.zip) */}
+      {activeTab === 'home' && (
+        <CinematicViewer
+          onOpenAuth={(mode) => setActiveTab(mode || 'login')}
+          onNavigateTab={(tab) => {
+            if (tab === 'dashboard' && !currentUser) {
+              setActiveTab('login');
+              return;
+            }
+            setActiveTab(tab);
+          }}
+          goToTeamTrigger={goToTeamTrigger}
+          goToFrontTrigger={goToFrontTrigger}
+          goToFaqTrigger={goToFaqTrigger}
+        />
+      )}
 
-          {/* Main Content Area */}
-          <main className="flex-1 min-w-0">
-            <ErrorBoundary onReset={() => setActiveTab('dashboard')}>
-
-            {/* 0. Dedicated Home Landing Page View */}
-            {activeTab === 'home' && (
-              <HomeLandingPage
-                onNavigateTab={(tab) => {
-                  if (tab === 'dashboard' && !currentUser) {
-                    setActiveTab('login');
-                    showToast({
-                      title: 'Sign In Required',
-                      description: 'Please sign in or register to enter your private dashboard.',
-                      type: 'info'
-                    });
-                    return;
-                  }
-                  setActiveTab(tab);
-                }}
-                currentUser={currentUser}
-                criticalCount={summary?.criticalRisks || 0}
-                productsCount={products?.length || 0}
-                suppliersCount={suppliers?.length || 0}
-              />
-            )}
+      {/* Main Content Area for Dedicated Routes (Only when not on full-screen 3D home) */}
+      {activeTab !== 'home' && (
+        <div className="w-full max-w-[1780px] px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-10 relative">
+          <div className="flex flex-col lg:flex-row gap-6 relative z-10">
+            <main className="flex-1 min-w-0">
+              <ErrorBoundary onReset={() => setActiveTab('dashboard')}>
 
             {/* 0.1 Dedicated Our Team Page View */}
             {activeTab === 'team' && (
@@ -762,6 +784,7 @@ export default function SupplyGuardApp({ onBackToVerification, onGoToHome }) {
           </main>
         </div>
       </div>
+      )}
 
       {/* Site-Wide Floating AI Assistant */}
       <AIChatWidget />

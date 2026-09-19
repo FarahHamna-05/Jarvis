@@ -32,7 +32,9 @@ export default function Navbar({
   isRefreshing = false,
   criticalCount = 0,
   onOpenOnboarding,
-  onGoToHome
+  onGoToHome,
+  onGoToTeam,
+  onGoToFaq
 }) {
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -227,6 +229,16 @@ export default function Navbar({
                 <button
                   key={item.id}
                   onClick={() => {
+                    if (item.id === 'team') {
+                      if (onGoToTeam) onGoToTeam();
+                      else if (setActiveTab) setActiveTab('team');
+                      return;
+                    }
+                    if (item.id === 'faq') {
+                      if (onGoToFaq) onGoToFaq();
+                      else if (setActiveTab) setActiveTab('faq');
+                      return;
+                    }
                     if (item.id === 'dashboard' && !currentUser) {
                       if (setActiveTab) setActiveTab('login');
                       return;
