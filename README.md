@@ -74,12 +74,12 @@ The numerical risk calculation does not depend on the LLM.
 ### Automated Supplier Outreach
 
 - Gmail SMTP for supplier emails
-- Vapi.ai for AI voice calls
+- Bolna AI for AI voice calls
 - Dynamic product and supplier information
 
 ### Structured Voice Response
 
-Vapi extracts:
+Bolna AI extracts:
 
 ```text
 availability
@@ -121,7 +121,7 @@ The final supplier/procurement decision requires human approval.
               MongoDB      Ollama
                  │
                  ▼
-              Vapi.ai
+              Bolna AI
                  │
                  ▼
               Supplier
@@ -132,7 +132,7 @@ The final supplier/procurement decision requires human approval.
 During local development:
 
 ```text
-Vapi.ai → ngrok → Spring Boot :8085 → MongoDB
+Bolna AI → ngrok → Spring Boot :8085 → MongoDB
 ```
 
 ---
@@ -160,16 +160,15 @@ Vapi.ai → ngrok → Spring Boot :8085 → MongoDB
 - MongoDB integration
 - Deterministic inventory-risk calculation
 - Gmail SMTP email delivery
-- Vapi AI voice assistant
-- Vapi structured data extraction
+- Bolna AI voice assistant
+- Bolna AI structured data extraction
 - Dynamic supplier/product information
 - ngrok connectivity between Vapi and local backend
-
-### In Progress
-
-- Vapi webhook processing
+- Bolna AI webhook processing
 - Saving call results to MongoDB
 - Supplier response comparison
+
+### In Progress
 - AI recommendation
 - Frontend comparison and recommendation UI
 - Human approval/rejection workflow
@@ -179,10 +178,10 @@ Vapi.ai → ngrok → Spring Boot :8085 → MongoDB
 ## 7. Development History
 
 The project evolved from an initial voice-calling approach using
-Twilio + ElevenLabs to Vapi.ai after encountering account,
+Twilio + ElevenLabs Vapi.ai , Bolna AI after encountering account,
 authentication and regional calling limitations.
 
-The current architecture uses Vapi.ai for supplier voice automation
+The current architecture uses Bolna AI for supplier voice automation
 and Gmail SMTP for supplier email communication.
 
 See:
@@ -247,7 +246,7 @@ http://localhost:5173
 
 - MongoDB
 - Ollama
-- Vapi.ai
+- Bolna AI
 - Gmail SMTP
 
 For local Vapi webhook testing, ngrok must also be running.
